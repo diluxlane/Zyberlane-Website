@@ -745,7 +745,7 @@
   /* Two featured projects, then a final gallery invitation. */
   .work-track > .work-end{display:flex; align-items:center; justify-content:center; text-align:center; padding:32px 24px;}
   .work-end h3{font-size:clamp(22px,3vw,34px); margin:16px 0;}
-  [data-slug="divine-tattoo"] .thumb-frame img{object-fit:contain; background:var(--black-2);}
+  [data-slug="divine-tattoo"] .thumb-frame img{object-fit:cover; object-position:top center; background:var(--black-2);}
   @media(max-height:640px){
     .scroll-work .work-sticky{padding:10px 0;}
     #work.scroll-work .section-head{margin-bottom:10px; padding-bottom:10px; gap:8px;}
@@ -1081,6 +1081,13 @@
     navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   });
   mainNav.querySelectorAll('a').forEach(a => a.addEventListener('click', closeNav));
+  // Close the dropdown on outside taps/clicks without blocking the page action.
+  document.addEventListener('click', (e) => {
+    if (mainNav.classList.contains('open') &&
+        !mainNav.contains(e.target) && !navToggle.contains(e.target)){
+      closeNav();
+    }
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && mainNav.classList.contains('open')){
       closeNav();
