@@ -702,7 +702,7 @@
     padding:24px; border:1px solid var(--line); border-radius:20px; background:var(--panel); color:var(--white);
     box-shadow:0 24px 80px rgba(0,0,0,.65); overflow-y:auto;
   }
-  .portfolio-dialog[open]{animation:portfolio-enter .25s var(--ease);}
+  /* Portfolio motion uses native Web Animations; no additional library required. */
   .portfolio-dialog::backdrop{background:rgba(0,0,0,.78); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);}
   .portfolio-dialog-head{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px;}
   .portfolio-dialog h2{font-family:'Poppins'; font-size:24px; font-weight:800; text-transform:uppercase;}
@@ -711,7 +711,7 @@
   .portfolio-gallery .thumb-frame img{height:180px;}
   .portfolio-gallery .body{padding:20px;}
   .portfolio-gallery h3{font-size:18px;}
-  @keyframes portfolio-enter{from{opacity:0; transform:translateY(12px) scale(.98);}to{opacity:1; transform:none;}}
+
   @media(max-width:860px){
     .work-track .project-card{display:block;}
     .work-track .thumb-frame{border-right:none; border-bottom:1px solid var(--line); padding:10px 10px 0;}
@@ -729,8 +729,16 @@
     .work-controls .eyebrow{font-size:9px; letter-spacing:.06em;}
   }
   @media(prefers-reduced-motion:reduce){
-    .portfolio-dialog[open]{animation:none;}
+
     .work-track{will-change:auto;}
+  }
+
+  #openPortfolio, .work-arrow, .portfolio-gallery .visit-btn{
+    transition:background .25s var(--ease), border-color .25s var(--ease), scale .18s var(--ease);
+  }
+  #openPortfolio:active, .work-arrow:not(:disabled):active, .portfolio-gallery .visit-btn:active{scale:.97;}
+  @media(prefers-reduced-motion:reduce){
+    #openPortfolio:active, .work-arrow:not(:disabled):active, .portfolio-gallery .visit-btn:active{scale:1;}
   }
 
 </style>
@@ -1654,16 +1662,45 @@
   window.addEventListener('load',measure);
   reduced.addEventListener('change',measure);
   if(document.fonts)document.fonts.ready.then(measure);
+  var motion=[], closing=false;
+  function clearMotion(){
+    motion.forEach(function(animation){animation.cancel();});
+    motion=[];
+  }
+  function animateEntry(){
+    if(typeof dialog.animate!=='function')return;
+    var still=reduced.matches, easing='cubic-bezier(.2,0,0,1)';
+    motion.push(dialog.animate([{opacity:0},{opacity:1}],{duration:220,easing:easing}));
+    Array.from(gallery.children).forEach(function(card,i){
+      var from=still?{opacity:0}:{opacity:0,translate:'0 12px'};
+      var to=still?{opacity:1}:{opacity:1,translate:'0 0'};
+      motion.push(card.animate([from,to],{duration:640,delay:i*70,easing:easing,fill:'backwards'}));
+    });
+  }
+  function closePortfolio(){
+    if(closing||!dialog.open)return;
+    closing=true; clearMotion();
+    if(typeof dialog.animate!=='function'){dialog.close();return;}
+    var from=reduced.matches?{opacity:1}:{opacity:1,translate:'0 0'};
+    var to=reduced.matches?{opacity:0}:{opacity:0,translate:'0 12px'};
+    var exit=dialog.animate([from,to],{duration:320,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'});
+    motion.push(exit);
+    exit.finished.catch(function(){}).then(function(){if(dialog.open)dialog.close();});
+  }
   opener.addEventListener('click',function(){
-    oldOverflow=document.body.style.overflow; document.body.style.overflow='hidden'; dialog.showModal();
+    if(dialog.open)return;
+    clearMotion(); closing=false;
+    oldOverflow=document.body.style.overflow; document.body.style.overflow='hidden';
+    dialog.showModal(); animateEntry();
   });
-  document.getElementById('closePortfolio').addEventListener('click',function(){dialog.close();});
+  document.getElementById('closePortfolio').addEventListener('click',closePortfolio);
+  dialog.addEventListener('cancel',function(e){e.preventDefault();closePortfolio();});
   dialog.addEventListener('click',function(e){
     if(e.target!==dialog)return;
     var r=dialog.getBoundingClientRect();
-    if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();
+    if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePortfolio();
   });
-  dialog.addEventListener('close',function(){document.body.style.overflow=oldOverflow;opener.focus({preventScroll:true});});
+  dialog.addEventListener('close',function(){clearMotion();closing=false;document.body.style.overflow=oldOverflow;opener.focus({preventScroll:true});});
   measure();
 })();
 </script>
