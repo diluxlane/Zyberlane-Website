@@ -741,6 +741,24 @@
     #openPortfolio:active, .work-arrow:not(:disabled):active, .portfolio-gallery .visit-btn:active{scale:1;}
   }
 
+
+  /* Two featured projects, then a final gallery invitation. */
+  .work-track > .work-end{display:flex; align-items:center; justify-content:center; text-align:center; padding:32px 24px;}
+  .work-end h3{font-size:clamp(22px,3vw,34px); margin:16px 0;}
+  [data-slug="divine-tattoo"] .thumb-frame img{object-fit:contain; background:var(--black-2);}
+  @media(max-height:640px){
+    .scroll-work .work-sticky{padding:10px 0;}
+    #work.scroll-work .section-head{margin-bottom:10px; padding-bottom:10px; gap:8px;}
+    #work.scroll-work .section-head h2{font-size:20px;}
+    .scroll-work .work-track .project-card{display:block;}
+    .scroll-work .work-track .thumb-frame, .scroll-work .work-track .desc{display:none;}
+    .scroll-work .work-track .body{padding:12px 18px;}
+    .scroll-work .work-track h3{font-size:16px; margin:4px 0;}
+    .scroll-work .work-track .visit-btn{margin-top:8px; padding:8px 14px;}
+    .scroll-work .work-controls{margin-top:10px;}
+    .scroll-work .work-end{padding:18px;}
+  }
+
 </style>
 
 </head>
@@ -828,7 +846,7 @@
       <div class="projects-grid work-track" id="projectsGrid">
     <div class="project-card" data-slug="divine-tattoo">
       <div class="thumb-frame">
-        <img src="https://raw.githubusercontent.com/diluxlane/Divine-Tattoo-Website/main/assets/hero-artist.jpg" alt="Tattoo artist at work, featured on the Divine Tattoo website" loading="lazy" decoding="async">
+        <img src="assets/divine-tattoo-preview.jpg" alt="Divine Tattoo website hero page" loading="lazy" decoding="async">
       </div>
       <div class="body">
         <div class="num">01</div>
@@ -850,6 +868,14 @@
         <a class="visit-btn" href="https://diluxln.netlify.app/" target="_blank" rel="noopener">Visit Site &rarr;</a>
       </div>
     </div>
+        <div class="project-card work-end" id="workEndPanel">
+          <div>
+            <span class="eyebrow">Explore our projects</span>
+            <h3>See all our work</h3>
+            <p class="desc">Browse the full portfolio.</p>
+            <button type="button" class="visit-btn work-all" id="openPortfolioEnd" aria-haspopup="dialog">View All Work <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="work-controls">
@@ -1612,23 +1638,27 @@
   var gallery=document.getElementById('portfolioGallery'), opener=document.getElementById('openPortfolio');
   var reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
   var active=false, distance=0, index=0, queued=false, top=90, oldOverflow='';
-  function cards(){return Array.from(track.children);}
-  cards().forEach(function(card){
+  function cards(){return Array.from(track.querySelectorAll('.project-card[data-slug]')).slice(0,2);}
+  Array.from(track.querySelectorAll('.project-card[data-slug]')).forEach(function(card){
     var copy=card.cloneNode(true);
     copy.querySelectorAll('[id]').forEach(function(el){el.removeAttribute('id');});
     copy.querySelectorAll('img').forEach(function(img){img.loading='lazy';});
     gallery.appendChild(copy);
   });
+  // Keep only two featured projects in the scrolling showcase; the gallery includes all projects.
+  Array.from(track.querySelectorAll('.project-card[data-slug]')).slice(2).forEach(function(card){card.remove();});
+  function panels(){return cards().concat([document.getElementById('workEndPanel')]);}
   function controls(progress){
-    index=Math.round(progress*(cards().length-1));
-    position.textContent=String(index+1).padStart(2,'0')+' / '+String(cards().length).padStart(2,'0');
-    previous.disabled=index===0; next.disabled=index===cards().length-1;
+    index=Math.round(progress*(panels().length-1));
+    position.textContent=index===cards().length?'All Work':String(index+1).padStart(2,'0')+' / '+String(cards().length).padStart(2,'0');
+    previous.disabled=index===0; next.disabled=index===panels().length-1;
   }
   function update(){
     queued=false;
     if(!active){controls(distance ? viewport.scrollLeft/distance : 0);return;}
     var progress=Math.max(0,Math.min(1,(top-section.getBoundingClientRect().top)/distance));
-    track.style.transform='translate3d('+(-progress*distance)+'px,0,0)';
+    if(reduced.matches){track.style.transform='';viewport.scrollLeft=progress*distance;}
+    else{track.style.transform='translate3d('+(-progress*distance)+'px,0,0)';}
     controls(progress);
   }
   function schedule(){if(!queued){queued=true;requestAnimationFrame(update);}}
@@ -1636,7 +1666,7 @@
     section.classList.remove('scroll-work');
     track.style.transform=''; viewport.scrollLeft=0;
     distance=Math.max(0,track.scrollWidth-viewport.clientWidth);
-    active=!reduced.matches && distance>0 && sticky.offsetHeight+top+48<window.innerHeight;
+    active=distance>0;
     if(active){
       section.classList.add('scroll-work');
       section.style.setProperty('--work-height',(sticky.offsetHeight+distance+56)+'px');
@@ -1644,8 +1674,8 @@
     update();
   }
   function go(target){
-    target=Math.max(0,Math.min(cards().length-1,target));
-    var offset=cards()[target].offsetLeft-cards()[0].offsetLeft;
+    target=Math.max(0,Math.min(panels().length-1,target));
+    var offset=panels()[target].offsetLeft-panels()[0].offsetLeft;
     if(active){
       window.scrollTo({top:window.scrollY+section.getBoundingClientRect().top-top+offset,behavior:reduced.matches?'auto':'smooth'});
     }else{viewport.scrollTo({left:offset,behavior:reduced.matches?'auto':'smooth'});}
@@ -1687,12 +1717,16 @@
     motion.push(exit);
     exit.finished.catch(function(){}).then(function(){if(dialog.open)dialog.close();});
   }
-  opener.addEventListener('click',function(){
+  var lastOpener=opener;
+  function openPortfolio(event){
+    lastOpener=event.currentTarget;
     if(dialog.open)return;
     clearMotion(); closing=false;
     oldOverflow=document.body.style.overflow; document.body.style.overflow='hidden';
     dialog.showModal(); animateEntry();
-  });
+  }
+  opener.addEventListener('click',openPortfolio);
+  document.getElementById('openPortfolioEnd').addEventListener('click',openPortfolio);
   document.getElementById('closePortfolio').addEventListener('click',closePortfolio);
   dialog.addEventListener('cancel',function(e){e.preventDefault();closePortfolio();});
   dialog.addEventListener('click',function(e){
@@ -1700,7 +1734,7 @@
     var r=dialog.getBoundingClientRect();
     if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePortfolio();
   });
-  dialog.addEventListener('close',function(){clearMotion();closing=false;document.body.style.overflow=oldOverflow;opener.focus({preventScroll:true});});
+  dialog.addEventListener('close',function(){clearMotion();closing=false;document.body.style.overflow=oldOverflow;lastOpener.focus({preventScroll:true});});
   measure();
 })();
 </script>
