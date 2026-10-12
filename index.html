@@ -142,6 +142,7 @@
   }
   nav a:hover::after{width:100%;}
   .nav-toggle{display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; z-index:110; position:relative;}
+  .nav-toggle{padding:6px; margin-right:4px;}
   .nav-toggle span{width:22px; height:2px; background:var(--white); transition:transform .3s var(--ease), opacity .3s var(--ease);}
   .nav-toggle.active span:nth-child(1){transform:translateY(7px) rotate(45deg);}
   .nav-toggle.active span:nth-child(2){opacity:0;}
@@ -372,6 +373,13 @@
     padding:12px 14px; border-radius:4px; font-family:'Inter',sans-serif; font-size:14px;
     transition:border-color .25s var(--ease);
   }
+  .bf-grid .bf-field{margin-bottom:0;}
+  #bookingForm select{
+    appearance:none; -webkit-appearance:none;
+    padding-right:44px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%238a8683' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center; background-size:16px 16px;
+  }
   .bf-field textarea{min-height:120px; resize:vertical;}
   .bf-field input:focus, .bf-field select:focus, .bf-field textarea:focus{
     outline:none; border-color:rgba(196,22,42,.6);
@@ -401,7 +409,7 @@
   .bf-status.error{color:#f28b8b;}
   #bookingForm .cta-btn{
     appearance:none; -webkit-appearance:none; background:var(--red); color:var(--white);
-    border:1px solid var(--red); cursor:pointer; font-size:12px;
+    border:1px solid var(--red); border-radius:6px; cursor:pointer; font-size:12px;
   }
   #bookingForm .cta-btn:hover{background:var(--red-glow); border-color:var(--red-glow);}
   #bookingForm .cta-btn:focus-visible{outline:2px solid var(--white); outline-offset:3px;}
@@ -516,6 +524,8 @@
     .hero{min-height:auto; padding:88px 6vw 30px;}
     .stats{gap:28px; flex-wrap:wrap; margin-top:28px; padding-top:14px;}
     section{padding:56px 6vw;}
+    #work, #contact{padding-bottom:28px;}
+    #skills, #booking{padding-top:32px;}
     .section-head{margin-bottom:28px; padding-bottom:14px;}
     .projects-empty{padding:44px 24px;}
     .skills-wrap{gap:16px;}
