@@ -115,13 +115,17 @@
     position:fixed; top:0; left:0; right:0; z-index:100;
     display:flex; align-items:center; justify-content:space-between;
     padding:22px 5vw;
-    transition:background .4s var(--ease), border-color .4s var(--ease), backdrop-filter .4s var(--ease);
-    border-bottom:1px solid transparent;
+    background:transparent; border:1px solid transparent;
+    transition:background .4s var(--ease), border-color .4s var(--ease), backdrop-filter .4s var(--ease),
+      top .4s var(--ease), left .4s var(--ease), right .4s var(--ease), padding .4s var(--ease), border-radius .4s var(--ease);
   }
   header.scrolled{
-    background:rgba(5,5,5,.82);
-    backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--line);
+    top:12px; left:3vw; right:3vw; padding:14px 2vw; border-radius:16px;
+    background:rgba(13,12,12,.82);
+    -webkit-backdrop-filter:blur(16px);
+    backdrop-filter:blur(16px);
+    border-color:var(--line);
+    box-shadow:0 8px 28px rgba(0,0,0,.25);
   }
   .brand{display:flex; align-items:center; gap:10px;}
   .brand img{width:32px; height:32px; display:block;}
@@ -231,8 +235,8 @@
     display:flex; gap:56px; margin-top:40px; padding-top:20px; border-top:1px solid var(--line);
   }
   .stat b{
-    display:block; font-family:'Poppins'; font-weight:300; font-size:34px; color:var(--red-glow);
-    text-shadow:0 0 10px rgba(255,45,66,.55), 0 0 22px rgba(196,22,42,.3);
+    display:block; font-family:'Poppins'; font-weight:800; font-size:34px; color:var(--red-glow);
+    text-shadow:0 0 12px rgba(255,45,66,.25);
     letter-spacing:.01em;
   }
   .stat span{
@@ -890,7 +894,7 @@
           <option>Not sure</option>
         </select>
       </div>
-      <div class="bf-field"><label for="bfTimeline">Timeline</label>
+      <div class="bf-field"><label for="bfTimeline">Timeline (optional)</label>
         <select id="bfTimeline">
           <option value="">Select one</option>
           <option>ASAP</option>
@@ -944,9 +948,12 @@
 
   // header scroll state
   const header = document.getElementById('siteHeader');
-  window.addEventListener('scroll', () => {
+  function updateHeaderState(){
     header.classList.toggle('scrolled', window.scrollY > 30);
-  });
+  }
+  window.addEventListener('scroll', updateHeaderState, { passive:true });
+  window.addEventListener('pageshow', updateHeaderState);
+  updateHeaderState();
 
   // ---------- ADDITIVE: scroll-to-top FAB with liquid scroll-progress fill.
   // WhatsApp stays fixed at the anchor spot; this button pops in/out above it ----------
