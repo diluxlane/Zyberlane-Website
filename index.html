@@ -869,7 +869,7 @@
       <div class="bf-field"><label for="bfName">Name *</label><input type="text" id="bfName" required maxlength="200"></div>
       <div class="bf-field"><label for="bfEmail">Email *</label><input type="email" id="bfEmail" required maxlength="200"></div>
       <div class="bf-field"><label for="bfPhone">Phone</label><input type="tel" id="bfPhone" maxlength="40"></div>
-      <div class="bf-field"><label for="bfCompany">Company</label><input type="text" id="bfCompany" maxlength="200"></div>
+      <div class="bf-field"><label for="bfCompany">Company / Organization / Shop</label><input type="text" id="bfCompany" maxlength="200"></div>
       <div class="bf-field"><label for="bfProjectType">Project Type</label>
         <select id="bfProjectType">
           <option value="">Select one</option>
@@ -880,8 +880,7 @@
           <option>Other</option>
         </select>
       </div>
-      <div class="bf-field"><label for="bfPackage">Package (optional)</label><select id="bfPackage"><option value="">Not sure yet</option></select></div>
-      <div class="bf-field"><label for="bfBudget">Budget Range</label>
+      <div class="bf-field"><label for="bfBudget">Budget Range (optional)</label>
         <select id="bfBudget">
           <option value="">Select one</option>
           <option>Under $500</option>
@@ -1406,18 +1405,6 @@
   var MAX_FILES = 5;
   var MAX_FILE_BYTES = 10 * 1024 * 1024;
 
-  // populate package dropdown from live, active packages
-  sb.from('packages').select('id, name').eq('is_active', true).order('sort_order')
-    .then(function(res){
-      if (res.error || !res.data) return;
-      var sel = document.getElementById('bfPackage');
-      res.data.forEach(function(p){
-        var opt = document.createElement('option');
-        opt.value = p.id; opt.textContent = p.name;
-        sel.appendChild(opt);
-      });
-    });
-
   function setStatus(msg, type){
     statusEl.textContent = msg;
     statusEl.className = 'bf-status' + (type ? ' ' + type : '');
@@ -1467,14 +1454,13 @@
         attachments.push({ name: file.name, path: path, size: file.size });
       }
 
-      var packageSelect = document.getElementById('bfPackage');
       var { error: insertErr } = await sb.from('leads').insert({
         name: name,
         email: email,
         phone: document.getElementById('bfPhone').value.trim() || null,
         company: document.getElementById('bfCompany').value.trim() || null,
         project_type: document.getElementById('bfProjectType').value || null,
-        package_interested: packageSelect.value || null,
+        package_interested: null,
         budget_range: document.getElementById('bfBudget').value || null,
         timeline: document.getElementById('bfTimeline').value || null,
         message: message,
