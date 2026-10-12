@@ -740,15 +740,27 @@
   <div class="skills-wrap" id="servicesGrid">
     <div class="skill-card reveal">
       <div class="num">01</div>
-      <h3>AI Vibe Coding</h3>
-      <p>Building full products by directing AI coding tools with precision — rapid prototyping, iteration, and shipping without sacrificing structure or quality.</p>
-      <span class="level">Core Discipline</span>
+      <h3>Product Thinking</h3>
+      <p>Understanding the business, users, and real problem before deciding what should be built.</p>
+      <span class="level">Strategy</span>
     </div>
     <div class="skill-card reveal reveal-delay-1">
       <div class="num">02</div>
-      <h3>Prompt Engineering</h3>
-      <p>Crafting and refining prompts to get reliable, high-quality output from AI models — the discipline behind every fast, clean build we deliver.</p>
-      <span class="level">Master Level</span>
+      <h3>AI-Native Development</h3>
+      <p>Using AI-assisted workflows to prototype, develop, test, and iterate faster.</p>
+      <span class="level">Development</span>
+    </div>
+    <div class="skill-card reveal reveal-delay-2">
+      <div class="num">03</div>
+      <h3>Experience Design</h3>
+      <p>Studying references and user needs to create clean, practical, modern digital experiences.</p>
+      <span class="level">Design</span>
+    </div>
+    <div class="skill-card reveal reveal-delay-3">
+      <div class="num">04</div>
+      <h3>Software Engineering</h3>
+      <p>Turning ideas into functional websites, applications, systems, and integrations built for real use.</p>
+      <span class="level">Engineering</span>
     </div>
   </div>
 </section>
@@ -1347,7 +1359,7 @@
       // jsonb text values arrive already unwrapped as JS strings/booleans by supabase-js
       return { key: r.key, value: r.value };
     }));
-    if (services) renderServices(services);
+    // Core Expertise uses the curated static cards above; legacy CMS services must not replace them.
     renderPackages(packages || []);
     renderTestimonials(testimonials || []);
     if (projects) renderProjects(projects);
