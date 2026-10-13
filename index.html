@@ -769,25 +769,20 @@
   .cta-btn.whatsapp-quote:hover{background:#1ebe5b; border-color:#1ebe5b;}
   .cta-btn.whatsapp-quote:focus-visible{outline:2px solid var(--white); outline-offset:3px;}
   .contact-grid > div:first-child p.quote-note{
-    margin:14px 0 0; max-width:340px; font-size:13px; line-height:1.6; color:var(--gray);
+    margin:14px 0 0; max-width:340px; font-size:13px; font-weight:700; line-height:1.6; color:var(--white);
   }
-  .contact-grid .reveal.in .whatsapp-quote{animation:quote-enter .5s var(--ease) both;}
+  .cta-btn.whatsapp-quote{font-weight:700;}
   .whatsapp-quote::after{
     content:''; position:absolute; inset:0; border:1px solid rgba(37,211,102,.45);
     border-radius:inherit; pointer-events:none; opacity:0; z-index:-1;
   }
-  .contact-grid .reveal.in .whatsapp-quote::after{animation:quote-wave 4s ease-out .8s infinite;}
-  @keyframes quote-enter{
-    from{opacity:0; transform:translateY(8px) scale(.97);}
-    to{opacity:1; transform:translateY(0) scale(1);}
-  }
+  .whatsapp-quote::after{animation:quote-wave 2.8s ease-out infinite;}
   @keyframes quote-wave{
-    0%,65%{opacity:0; transform:scale(1);}
-    70%{opacity:.4; transform:scale(1);}
-    100%{opacity:0; transform:scale(1.12,1.22);}
+    0%{opacity:.45; transform:scale(1);}
+    80%,100%{opacity:0; transform:scale(1.12,1.22);}
   }
   @media(prefers-reduced-motion:reduce){
-    .contact-grid .reveal.in .whatsapp-quote, .contact-grid .reveal.in .whatsapp-quote::after{animation:none;}
+    .whatsapp-quote::after{animation:none;}
   }
 
 </style>
