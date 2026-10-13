@@ -409,7 +409,7 @@
   .bf-status.error{color:#f28b8b;}
   #bookingForm .cta-btn{
     appearance:none; -webkit-appearance:none; background:var(--red); color:var(--white);
-    border:1px solid var(--red); border-radius:6px; cursor:pointer; font-size:12px;
+    border:1px solid var(--red); border-radius:14px; cursor:pointer; font-size:12px;
   }
   #bookingForm .cta-btn:hover{background:var(--red-glow); border-color:var(--red-glow);}
   #bookingForm .cta-btn:focus-visible{outline:2px solid var(--white); outline-offset:3px;}
@@ -762,12 +762,33 @@
 
   /* Contact quote CTA: existing button styling, WhatsApp palette. */
   .cta-btn.whatsapp-quote{
-    background:#25d366; color:#07140c; border-color:#25d366; border-radius:6px;
+    background:#25d366; color:#07140c; border-color:#25d366; border-radius:14px;
+    position:relative; isolation:isolate;
     max-width:100%; white-space:normal; line-height:1.6;
   }
   .cta-btn.whatsapp-quote:hover{background:#1ebe5b; border-color:#1ebe5b;}
   .cta-btn.whatsapp-quote:focus-visible{outline:2px solid var(--white); outline-offset:3px;}
-  .whatsapp-quote span{flex-shrink:0;}
+  .contact-grid > div:first-child p.quote-note{
+    margin:14px 0 0; max-width:340px; font-size:13px; line-height:1.6; color:var(--gray);
+  }
+  .contact-grid .reveal.in .whatsapp-quote{animation:quote-enter .5s var(--ease) both;}
+  .whatsapp-quote::after{
+    content:''; position:absolute; inset:0; border:1px solid rgba(37,211,102,.45);
+    border-radius:inherit; pointer-events:none; opacity:0; z-index:-1;
+  }
+  .contact-grid .reveal.in .whatsapp-quote::after{animation:quote-wave 4s ease-out .8s infinite;}
+  @keyframes quote-enter{
+    from{opacity:0; transform:translateY(8px) scale(.97);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  @keyframes quote-wave{
+    0%,65%{opacity:0; transform:scale(1);}
+    70%{opacity:.4; transform:scale(1);}
+    100%{opacity:0; transform:scale(1.12,1.22);}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .contact-grid .reveal.in .whatsapp-quote, .contact-grid .reveal.in .whatsapp-quote::after{animation:none;}
+  }
 
 </style>
 
@@ -990,7 +1011,8 @@
     <div class="reveal">
       <h2>Let's Build Together</h2>
       <p>Zyberlane is open for new projects and collaborations. Tell us what you're building — we'll bring the AI-powered speed.</p>
-      <a class="cta-btn whatsapp-quote" href="https://wa.me/94711524659?text=Hi%20Zyberlane%2C%20I%27d%20like%20a%20quote%20for%20my%20project." target="_blank" rel="noopener">Get a Quote with Our WhatsApp Agent <span aria-hidden="true">↗</span></a>
+      <a class="cta-btn whatsapp-quote" href="https://wa.me/94711524659?text=Hi%20Zyberlane%2C%20I%27d%20like%20a%20quote%20for%20my%20project." target="_blank" rel="noopener" aria-describedby="whatsappQuoteNote">Get a Quote</a>
+      <p class="quote-note" id="whatsappQuoteNote">Chat with our WhatsApp agent to get a quote for your project.</p>
     </div>
     <div class="contact-list reveal reveal-delay-1">
       <div class="row"><div class="k">Email</div><a class="v muted link" id="contactEmailLink" href="mailto:contact@zyberlane.com" data-cms="contact_email">contact@zyberlane.com</a></div>
