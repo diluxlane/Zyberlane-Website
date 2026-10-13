@@ -1403,8 +1403,26 @@
   }
 
   function applySiteSettings(rows){
+    // Upgrade only the previous default copy without writing to the shared CMS.
+    // Any custom text entered through admin continues to take precedence.
+    var legacyDefaults = {
+      hero_role: 'Software Company & AI Vibe Coding',
+      hero_description: 'We design and build software and websites by pairing human direction with AI vibe coding — turning ideas into working products fast, without cutting corners on craft.',
+      seo_title: 'Zyberlane — Software Company & AI Vibe Coding | Sri Lanka',
+      seo_description: 'Zyberlane builds websites and software with AI vibe coding and prompt engineering. Based in Sri Lanka, open for new client projects.'
+    };
+    var defaults = {
+      hero_role: document.querySelector('[data-cms="hero_role"]').textContent.trim(),
+      hero_description: document.querySelector('[data-cms="hero_description"]').textContent.trim(),
+      seo_title: document.title,
+      seo_description: document.querySelector('meta[name="description"]').content
+    };
     var map = {};
-    rows.forEach(function(r){ map[r.key] = r.value; });
+    rows.forEach(function(r){
+      var isLegacy = Object.prototype.hasOwnProperty.call(legacyDefaults, r.key) &&
+        typeof r.value === 'string' && r.value.replace(/\s+/g, ' ').trim() === legacyDefaults[r.key];
+      map[r.key] = isLegacy ? defaults[r.key] : r.value;
+    });
 
     document.querySelectorAll('[data-cms]').forEach(function(el){
       var key = el.getAttribute('data-cms');
