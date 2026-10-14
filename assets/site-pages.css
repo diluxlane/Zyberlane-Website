@@ -1,6 +1,177 @@
-/* Shared links, plus existing design patterns for the static company pages. */
+/* Shared navigation, footer and existing homepage interactions. */
+html{scroll-behavior:smooth;}
+  /* ---------- NAV ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 5vw;
+    background:transparent; border:1px solid transparent;
+    transition:background .4s var(--ease), border-color .4s var(--ease), backdrop-filter .4s var(--ease),
+      top .4s var(--ease), left .4s var(--ease), right .4s var(--ease), padding .4s var(--ease), border-radius .4s var(--ease);
+  }
+  header.scrolled{
+    top:12px; left:3vw; right:3vw; padding:14px 2vw; border-radius:16px;
+    background:rgba(13,12,12,.82);
+    -webkit-backdrop-filter:blur(16px);
+    backdrop-filter:blur(16px);
+    border-color:var(--line);
+    box-shadow:0 8px 28px rgba(0,0,0,.25);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand img{width:32px; height:32px; display:block;}
+  .brand span{font-family:'Poppins'; font-weight:800; font-size:15px; letter-spacing:.06em;}
+  nav ul{list-style:none; display:flex; gap:36px;}
+  nav a{
+    font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--gray); position:relative; padding-bottom:3px;
+  }
+  nav a:hover{color:var(--white);}
+  #mainNav a[aria-current="page"]{color:var(--white);}
+  nav a::after{
+    content:''; position:absolute; left:0; bottom:0; height:1px; width:0;
+    background:var(--red-glow); transition:width .3s var(--ease);
+  }
+  nav a:hover::after{width:100%;}
+  #mainNav a[aria-current="page"]::after{width:100%;}
+  .nav-toggle{display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; z-index:110; position:relative;}
+  .nav-toggle{padding:6px; margin-right:4px; min-width:44px; min-height:44px; align-items:center; justify-content:center;}
+  .nav-toggle span{width:22px; height:2px; background:var(--white); transition:transform .3s var(--ease), opacity .3s var(--ease);}
+  .nav-toggle.active span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-toggle.active span:nth-child(2){opacity:0;}
+  .nav-toggle.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  #mainNav{
+    transition:transform .3s var(--ease), opacity .25s var(--ease), visibility .3s;
+  }
+  @media (max-width:860px){
+    .nav-toggle{display:flex;}
+    #mainNav{
+      position:fixed; top:76px; right:5vw; width:min(58vw,240px);
+      background:rgba(13,12,12,.98); backdrop-filter:blur(16px);
+      border:1px solid var(--line);
+      border-radius:14px;
+      box-shadow:0 18px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(147,6,21,.08);
+      display:flex; align-items:stretch; justify-content:center;
+      padding:10px;
+      transform-origin:top right;
+      transform:scale(.9) translateY(-8px); opacity:0; visibility:hidden; z-index:105;
+    }
+    #mainNav.open{transform:scale(1) translateY(0); opacity:1; visibility:visible;}
+    #mainNav ul{flex-direction:column; gap:2px; width:100%; padding:0;}
+    #mainNav ul li{width:100%;}
+    #mainNav a{
+      font-size:12px; display:block; padding:13px 14px; border-radius:9px;
+      transition:background .2s var(--ease), color .2s var(--ease);
+    }
+    #mainNav a:hover, #mainNav a:active{background:rgba(147,6,21,.16); color:var(--white);}
+    #mainNav a[aria-current="page"]{background:rgba(147,6,21,.16);}
+    #mainNav a::after{display:none;}
+  }
+  /* ================= ADDITIVE: CUSTOM CURSOR ================= */
+  html.has-custom-cursor, html.has-custom-cursor body{cursor:none;}
+  html.has-custom-cursor a, html.has-custom-cursor button,
+  html.has-custom-cursor .skill-card, html.has-custom-cursor .p-step{cursor:none;}
+  #cursorDot, #cursorRing{
+    position:fixed; top:0; left:0; z-index:9999; pointer-events:none;
+    border-radius:50%; will-change:transform, width, height, opacity;
+    transform:translate3d(-50%,-50%,0);
+  }
+  #cursorDot{
+    width:10px; height:10px; background:var(--red-glow);
+    box-shadow:0 0 8px rgba(255,45,66,.7);
+    opacity:0; transition:opacity .25s var(--ease), width .25s var(--ease), height .25s var(--ease), background .25s var(--ease);
+  }
+  #cursorRing{
+    width:34px; height:34px; border:1px solid rgba(196,22,42,.65);
+    background:rgba(196,22,42,.06);
+    opacity:0; transition:opacity .25s var(--ease), width .3s var(--ease), height .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease), background .3s var(--ease);
+  }
+  html.has-custom-cursor #cursorDot, html.has-custom-cursor #cursorRing{opacity:1;}
+  #cursorRing.cursor-hover{
+    width:46px; height:46px;
+    border-color:var(--red-glow);
+    background:rgba(196,22,42,.14);
+    box-shadow:0 0 26px rgba(255,45,66,.55), 0 0 50px rgba(196,22,42,.3);
+  }
+  #cursorDot.cursor-hover{width:6px; height:6px; background:var(--white);}
+  @media (max-width:860px), (hover:none), (pointer:coarse){
+    #cursorDot, #cursorRing{display:none !important;}
+    html.has-custom-cursor, html.has-custom-cursor body{cursor:auto;}
+  }
+
+  /* ================= ADDITIVE: FLOATING ACTION BUTTONS ================= */
+  .fab{
+    position:fixed; right:20px; width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    z-index:500; cursor:pointer; overflow:hidden;
+    border:1px solid var(--line);
+    transition:transform .3s var(--ease), opacity .35s var(--ease), box-shadow .25s var(--ease);
+  }
+  .fab:hover{ transform:translateY(-3px); }
+
+  /* WhatsApp is fixed at the bottom-right anchor point and never moves */
+  .fab-whatsapp{
+    bottom:24px; background:#25D366; color:#0a0a0a; text-decoration:none;
+    animation:fabWaPulse 2.4s ease-out infinite;
+  }
+
+  /* scroll-to-top sits fixed in its own spot above WhatsApp, popping in/out
+     with a soft scale/fade instead of sliding anything else around */
+  .fab-scrolltop{
+    bottom:86px; background:rgba(15,15,15,.92); backdrop-filter:blur(6px);
+    padding:0; font-family:inherit;
+    opacity:0; transform:scale(.55) translateY(8px);
+    pointer-events:none;
+    transition:opacity .35s var(--ease), transform .4s cubic-bezier(.34,1.56,.64,1), box-shadow .25s var(--ease);
+  }
+  .fab-scrolltop.is-visible{
+    opacity:1; transform:scale(1) translateY(0);
+    pointer-events:auto;
+  }
+  .fab-scrolltop .fab-liquid{
+    position:absolute; left:0; right:0; bottom:0; height:0%;
+    background:linear-gradient(180deg, var(--red-glow), var(--red));
+    transition:height .15s linear;
+    z-index:1;
+    overflow:visible;
+  }
+  /* a repeating ripple pattern rides the liquid's surface, scrolling sideways
+     in a seamless loop — a real moving wave, not just a wobble */
+  .fab-liquid::before{
+    content:''; position:absolute; top:-5px; left:-25%; width:150%; height:12px;
+    background-image:radial-gradient(ellipse 8px 6px at center, var(--red-glow) 55%, transparent 60%);
+    background-size:22px 12px;
+    background-repeat:repeat-x;
+    opacity:.9;
+    animation:fabWaveScroll 1.6s linear infinite;
+  }
+  @keyframes fabWaveScroll{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-22px); }
+  }
+  .fab-scrolltop .fab-icon{
+    position:relative; z-index:2; color:var(--white); font-size:18px; font-weight:700; line-height:1;
+  }
+  @keyframes fabWaPulse{
+    0%{ box-shadow:0 0 0 0 rgba(37,211,102,.55); }
+    70%{ box-shadow:0 0 0 12px rgba(37,211,102,0); }
+    100%{ box-shadow:0 0 0 0 rgba(37,211,102,0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .fab-whatsapp{ animation:none; }
+    .fab-liquid::before{ animation:none; }
+    .fab-scrolltop{ transition:opacity .2s; }
+  }
+  @media (max-width:600px){
+    .fab{ right:14px; width:44px; height:44px; }
+    .fab-whatsapp{ bottom:18px; }
+    .fab-scrolltop{ bottom:74px; }
+  }
+
+
 #mainNav ul{gap:clamp(12px,1.6vw,28px);}
-.footer-links{display:flex;flex-wrap:wrap;gap:4px 22px;flex-basis:100%;order:2;}
+.footer-links{display:flex;flex-wrap:wrap;gap:4px 22px;min-width:0;}
+footer > .foot-note{flex-basis:100%;margin-top:4px;padding-top:20px;border-top:1px solid var(--line);}
 .footer-links a{display:inline-flex;align-items:center;min-height:44px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.06em;color:#b7b3b0;text-transform:none;}
 .footer-links a:hover,.footer-links a[aria-current="page"]{color:#f5f4f2;}
 .form-privacy{margin:16px 0;color:#b7b3b0;font-size:12.5px;line-height:1.7;}
@@ -17,31 +188,14 @@
 .company-page *{box-sizing:border-box;}
 .company-page h1,.company-page h2,.company-page h3,.company-page p,.company-page ul{margin:0;}
 .company-page ::selection{background:var(--red);color:var(--white);}
-.company-page a{color:inherit;text-decoration:none;}
+:where(.company-page) a{color:inherit;text-decoration:none;}
 .company-page a:focus-visible,.company-page button:focus-visible,.company-page [tabindex]:focus-visible{outline:2px solid var(--red-glow);outline-offset:4px;}
 .skip-link{position:fixed;top:12px;left:12px;z-index:10001;transform:translateY(-160%);padding:14px 18px;background:var(--white);color:var(--black);border-radius:4px;}
 .skip-link:focus{transform:translateY(0);}
 .company-page section[id],.company-page main[id]{scroll-margin-top:100px;}
-.company-page header{
-  position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
-  padding:22px 5vw;background:rgba(5,5,5,.92);border:1px solid transparent;
-  transition:background .4s var(--ease),border-color .4s var(--ease),top .4s var(--ease),left .4s var(--ease),right .4s var(--ease),padding .4s var(--ease),border-radius .4s var(--ease);
-}
-.company-page header.scrolled{top:12px;left:3vw;right:3vw;padding:14px 2vw;border-radius:16px;background:rgba(13,12,12,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-color:var(--line);box-shadow:0 8px 28px rgba(0,0,0,.25);}
 .company-page .brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .company-page .brand img{width:32px;height:32px;display:block;}
 .company-page .brand span{font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;letter-spacing:.06em;}
-.company-page #mainNav{transition:transform .3s var(--ease),opacity .25s var(--ease),visibility .3s;}
-.company-page nav ul{list-style:none;display:flex;padding:0;}
-.company-page #mainNav a{display:inline-flex;align-items:center;min-height:44px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);position:relative;}
-.company-page #mainNav a:hover,.company-page #mainNav a[aria-current="page"]{color:var(--white);}
-.company-page #mainNav a::after{content:'';position:absolute;left:0;bottom:7px;height:1px;width:0;background:var(--red-glow);transition:width .3s var(--ease);}
-.company-page #mainNav a:hover::after,.company-page #mainNav a[aria-current="page"]::after{width:100%;}
-.company-page .nav-toggle{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;min-width:44px;min-height:44px;padding:6px;cursor:pointer;background:none;border:none;z-index:110;}
-.company-page .nav-toggle span{width:22px;height:2px;background:var(--white);transition:transform .3s var(--ease),opacity .3s var(--ease);}
-.company-page .nav-toggle.active span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-.company-page .nav-toggle.active span:nth-child(2){opacity:0;}
-.company-page .nav-toggle.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 .company-page main{min-height:calc(100vh - 150px);}
 .company-page section{padding:72px 5vw;}
 .company-page .page-intro{padding-top:160px;padding-bottom:48px;}
@@ -101,15 +255,6 @@
 .company-page footer .foot-note{font-family:'Space Mono',monospace;font-size:11px;color:#8a8683;letter-spacing:.06em;line-height:1.8;}
 @media(max-width:1000px){.company-page .skills-wrap{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:860px){
-  .company-page header{padding:16px 5vw;}
-  .company-page header.scrolled{padding:10px 2vw;}
-  .company-page .nav-toggle{display:flex;}
-  .company-page #mainNav{position:fixed;top:82px;right:5vw;width:min(70vw,260px);background:rgba(13,12,12,.98);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.5);padding:10px;transform-origin:top right;transform:scale(.9) translateY(-8px);opacity:0;visibility:hidden;z-index:105;}
-  .company-page #mainNav.open{transform:scale(1) translateY(0);opacity:1;visibility:visible;}
-  .company-page #mainNav ul{flex-direction:column;gap:2px;width:100%;}
-  .company-page #mainNav a{display:flex;padding:13px 14px;border-radius:9px;font-size:12px;}
-  .company-page #mainNav a:hover,.company-page #mainNav a[aria-current="page"]{background:rgba(147,6,21,.16);}
-  .company-page #mainNav a::after{display:none;}
   .company-page section{padding:48px 6vw;}
   .company-page .page-intro{padding-top:124px;padding-bottom:32px;}
   .company-page .founder-card{grid-template-columns:1fr;gap:22px;padding:28px;}
@@ -120,9 +265,11 @@
   .company-page .p-step{gap:18px;}
   .company-page .p-step .idx{width:42px;height:42px;}
   .company-page .legal-copy h2{font-size:20px;}
-  .footer-links{gap:2px 18px;}
+  .footer-links{gap:2px 18px;flex-basis:100%;}
+  footer > .foot-note{padding-right:56px;line-height:1.8;}
 }
 @media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
   .company-page *{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important;}
   .company-page .skill-card:hover{transform:none;}
 }
