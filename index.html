@@ -1700,9 +1700,13 @@
 
     // ---- spam checks: fail silently with a fake success so bots don't learn ----
     var secondsElapsed = (Date.now() - pageLoadedAt) / 1000;
-    if (honeypot || secondsElapsed < MIN_SECONDS_BEFORE_SUBMIT){
+    if (honeypot){
       setStatus('Thanks. Your request has been sent. We\'ll be in touch soon.', 'success');
       form.reset();
+      return;
+    }
+    if (secondsElapsed < MIN_SECONDS_BEFORE_SUBMIT){
+      setStatus('Please wait a moment, then try sending your request again.', 'error');
       return;
     }
 
