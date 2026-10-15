@@ -75,7 +75,7 @@
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     var activeMotion = new Set();
     var intro = Array.from(document.querySelectorAll('.page-intro .eyebrow, .page-intro h1, .page-intro .page-description, .page-intro .legal-date'));
-    var elements = new Set(document.querySelectorAll('[data-page-reveal], .section-head, .legal-copy > .legal-width > *'));
+    var elements = new Set(document.querySelectorAll('[data-page-reveal], .section-head'));
     intro.forEach(function(element, index) {
       element.setAttribute('data-page-delay', String(index * 100));
       elements.add(element);
