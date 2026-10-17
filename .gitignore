@@ -1,0 +1,13 @@
+# Local credentials and deployment state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.netlify/
+.vercel/
+node_modules/
+playwright-report/
+test-results/
