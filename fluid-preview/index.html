@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#030303">
+  <meta name="description" content="An isolated Zyberlane interactive fluid experiment. Move your cursor or drag to shape the red smoke.">
+  <title>Zyberlane — Fluid Lab</title>
+  <link rel="icon" href="../assets/favicon.png">
+  <link rel="stylesheet" href="/fluid-preview/fluid.css">
+  <script src="/fluid-preview/fluid.js" defer></script>
+</head>
+<body>
+  <canvas id="fluid" aria-label="Interactive red fluid. Move your pointer or drag a finger to stir it."></canvas>
+  <div class="veil" aria-hidden="true"></div>
+  <header>
+    <a class="wordmark" href="https://zyberlane.com" aria-label="Zyberlane website">Zyberlane<span>.</span></a>
+    <span class="lab-label"><span class="dot"></span> FLUID LAB <span class="edition">/ 008</span></span>
+  </header>
+  <main>
+    <div class="intro">
+      <p class="eyebrow">AN INTERACTIVE ATMOSPHERE</p>
+      <h1>Zyberlane<span>.</span></h1>
+      <p class="description">Move your cursor. Drag your finger.<br>Leave a little turbulence behind.</p>
+    </div>
+  </main>
+  <footer>
+    <div class="live-state"><span class="dot"></span><span id="status" role="status">Starting the fluid…</span></div>
+    <div class="controls" aria-label="Fluid controls">
+      <button id="burst" type="button">Stir it up <span aria-hidden="true">↗</span></button>
+      <button id="pause" type="button" aria-pressed="false">Pause</button>
+      <button id="clear" type="button">Clear</button>
+      <details id="settings">
+        <summary>Settings</summary>
+        <div class="settings-panel">
+          <p class="panel-label">ATMOSPHERE CONTROLS</p>
+          <label class="setting">Ambient motion <input id="ambient" type="checkbox" checked></label>
+          <label class="setting">Quality <select id="quality"><option value="auto">Auto</option><option value="low">Low</option><option value="high">High</option></select></label>
+          <div class="diagnostics" aria-label="Simulation diagnostics">
+            <p id="engine">Renderer: starting</p>
+            <p id="metrics">Frames: 0</p>
+            <p id="input">Input: none · moves: 0 · splats: 0</p>
+            <p id="health">Runtime errors: 0</p>
+          </div>
+          <p class="experiment-note">Isolated experiment · PR #8<br>No effect is loaded on the production homepage.</p>
+        </div>
+      </details>
+    </div>
+  </footer>
+  <noscript><p class="fallback">Enable JavaScript to run the fluid preview.</p></noscript>
+</body>
+</html>
