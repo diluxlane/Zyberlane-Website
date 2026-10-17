@@ -265,6 +265,8 @@
   }
 
   function seed() {
+    // Demo bursts belong to the lab; homepage allocation/resize must stay empty.
+    if (homeMode) return;
     for (let i = 0; i < 7; i++) {
       const angle = i / 7 * Math.PI * 2;
       splat(0.5 + Math.cos(angle) * 0.27 / Math.max(1, canvas.width / canvas.height),
@@ -274,7 +276,7 @@
 
   function step(dt) {
     while (pending.length) splat(...pending.shift());
-    if (ambient.checked && elapsed - lastAmbient > 0.12) {
+    if (!homeMode && ambient.checked && elapsed - lastAmbient > 0.12) {
       lastAmbient = elapsed;
       const a = elapsed * 0.26;
       for (const offset of [0, Math.PI]) {
@@ -377,6 +379,7 @@
     if (boundInputTarget !== inputTarget) {
       boundInputTarget = inputTarget;
       inputTarget.addEventListener('pointerdown', event => {
+        if (homeMode && !event.isTrusted) return;
         if (paused || lost || failed || (event.pointerType === 'mouse' && event.button !== 0)) return;
         if (homeMode && event.pointerType === 'touch') return;
         const current = point(event);
@@ -388,6 +391,9 @@
         if (pending.length < 24) pending.push([current.x, current.y, 0, 30, 0.7, 0.001]);
       }, { passive: true });
       inputTarget.addEventListener('pointermove', event => {
+        if (homeMode && !event.isTrusted) return;
+        // Layout/viewport changes can dispatch trusted mouse events without movement.
+        if (homeMode && event.pointerType === 'mouse' && event.movementX === 0 && event.movementY === 0) return;
         if (paused || lost || failed) return;
         if (homeMode && event.pointerType === 'touch') return;
         const touch = event.pointerType === 'touch';
@@ -406,6 +412,7 @@
         // Ignore touch Pointer Events above so each contact is processed once.
         for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
           inputTarget.addEventListener(type, event => {
+            if (!event.isTrusted) return;
             for (const touch of event.changedTouches) {
               const key = `touch:${touch.identifier}`;
               if (type === 'touchend' || type === 'touchcancel') { pointers.delete(key); continue; }
