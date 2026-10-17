@@ -4,8 +4,10 @@
 (() => {
   'use strict';
   class CPUFluid {
-    constructor(canvas) {
+    constructor(canvas, { color = [237, 3, 6], background = 3 } = {}) {
       this.canvas = canvas;
+      this.color = color;
+      this.background = background;
       this.context = canvas.getContext('2d', { alpha: false });
       this.surface = document.createElement('canvas');
       this.surfaceContext = this.surface.getContext('2d', { alpha: false });
@@ -129,9 +131,9 @@
           const light = 0.74 + 0.26 * Math.max(0, (-0.4 * dx + 0.65 * dy + 0.65) / (Math.hypot(dx, dy, 0.65) * 1.258));
           const ink = (1 - Math.exp(-Math.max(0, dye[k]) * 1.25)) * light;
           const pixel = ((h - 1 - j) * w + i) * 4;
-          data[pixel] = 3 + ink * 237;
-          data[pixel + 1] = 3 + ink * 3;
-          data[pixel + 2] = 3 + ink * 6;
+          data[pixel] = this.background + ink * this.color[0];
+          data[pixel + 1] = this.background + ink * this.color[1];
+          data[pixel + 2] = this.background + ink * this.color[2];
           data[pixel + 3] = 255;
         }
       }

@@ -1,86 +1,82 @@
-# Zyberlane Fluid Lab — mobile compatibility repair
+# Zyberlane homepage fluid atmosphere
 
-The experiment remains isolated under `/fluid-preview/`. The homepage, shared
-assets, security policy, database and hosting configuration are not changed.
-PR #8 was merged by the repository owner; subsequent repairs belong on a separate
-branch and must not be merged without review.
+The root homepage (`/`) loads the red fluid atmosphere directly. The `/fluid-preview/`
+lab remains available for diagnostics, pause/clear/quality controls and comparison.
+Both use the same engines under `assets/`.
 
-## Confirmed live failure
+## Homepage integration
 
-On 17 October 2026 the cloud browser opened
-`https://zyberlane.vercel.app/fluid-preview/` and rendered the Fluid Lab shell,
-but displayed `Fluid unavailable · WebGL2 required` with disabled controls.
-The actual browser console reported:
+- `index.html` includes one decorative canvas, `assets/home-fluid.css`, and the
+  ordered deferred scripts `assets/fluid-cpu.js` then `assets/fluid.js`.
+- Existing content, navigation, forms, portfolio, custom cursor, loading sequence
+  and floating buttons are retained. There are no Fluid Lab controls on the homepage.
+- The canvas is a fixed screen-blended layer, below navigation and floating controls,
+  with `pointer-events: none`. It cannot intercept clicks, focus or scrolling.
+- The smoke uses the existing `#c4162a` brand red at restrained opacity over black.
+- Desktop mouse movement is observed on the document. Passive touch listeners follow
+  a finger during native page scrolling without preventing default or capturing page
+  contacts. Touch Pointer Events are ignored on the homepage to prevent duplication.
+- The effect starts after the existing loader finishes, sleeps in hidden tabs,
+  and allocates no graphics on a reduced-motion homepage until that setting changes.
+- Only the homepage imports this atmosphere; About/Services/legal/admin pages do not.
 
-```text
-[Zyberlane fluid] Error: WebGL2 floating-point rendering is unavailable.
-    at initialize (.../fluid-preview/fluid.js:408:66)
-```
+## Compatibility
 
-This reproduces a graphics compatibility failure. It does not establish the exact
-browser/URL used by the person who reported a mobile failure.
-`https://zyberlane.netlify.app/fluid-preview/` separately returned a Netlify 404;
-merging GitHub/Vercel changes does not establish that Netlify has this route.
+Compatible browsers use WebGL2 velocity/dye advection, vorticity confinement and
+pressure projection. If WebGL2, floating-point render targets or shader setup are
+unavailable, the page replaces the GPU canvas and uses a Canvas2D CPU fluid solver.
+The fallback solves real velocity/pressure/dye fields; it does not draw particles.
 
-## Repair
+The GPU-only lab was observed failing in the cloud browser on 17 October 2026 with
+`WebGL2 floating-point rendering is unavailable`. The CPU fallback addresses that
+capability failure. If both renderers fail, the homepage hides the decorative layer
+and its original content remains usable.
 
-- Preserve the WebGL2 velocity/pressure/dye solver on compatible browsers.
-- Load a dependency-free Canvas2D CPU fluid solver from the same origin. It solves
-  a velocity/pressure grid, vorticity, pressure projection and dye advection; it
-  does not draw particle sprites.
-- Recover automatically if WebGL2 is missing, float render targets are missing,
-  shader setup fails, or the GPU context is interrupted.
-- Replace a canvas that acquired WebGL before acquiring a Canvas2D context, then
-  rebind pointer handlers. A single canvas cannot switch context types.
-- Retain working mouse/touch controls, pointer cancellation, clear, pause/resume,
-  coarse-pointer quality, reduced-motion and hidden-tab suspension in the fallback.
-- Handle an ended pointer contact without crashing on capture.
-- Keep the black/red direction, external scripts and existing CSP.
+CPU quality is bounded more conservatively on the homepage because existing page
+animations run alongside it. Real device frame rate and visual quality still need
+browser verification; numerical tests are not a performance guarantee.
 
-The CPU path trades some fine detail for compatibility and limits its grid size
-and pressure iterations. Browsers lacking both WebGL and Canvas2D show an explicit
-failure. Actual device performance still needs measurement.
-
-## Validation
-
-Run:
+## Checks
 
 ```sh
-node --check fluid-preview/fluid.js
-node --check fluid-preview/cpu-fluid.js
+node --check assets/fluid.js
+node --check assets/fluid-cpu.js
 node fluid-preview/tests/compatibility.cjs
 node security/verify.cjs
 ```
 
-The regression suite runs the actual CPU solver with Canvas stubs, and checks:
+The compatibility suite covers missing WebGL/float extensions, shader failure,
+actual CPU fluid evolution and pixel data, replacement-canvas input, pause/clear,
+visibility and reduced motion. Homepage coverage also checks initialization without
+lab controls, passive touch handlers, touch Pointer Event deduplication, cancellation,
+mouse movement, one document binding after fallback, loader sequencing, no initial
+graphics under reduced motion, and non-intercepting homepage markup/styles.
 
-- recovery from missing WebGL2, missing float extension and shader failure;
-- replacement-canvas input wiring and enabled controls;
-- touch contact/cancel and capture failure handling;
-- one animation loop, pause/resume, hidden tabs, clear and reduced motion;
-- finite evolving velocity/pressure/dye fields after 120 simulation steps;
-- non-black red image pixels and a full reset to zero.
+The existing CSP and its inline-script hashes remain unchanged. The new scripts
+are served from the same origin and need no weaker script policy.
 
-All of these pass. The nine unchanged GLSL programs also compile/link under native
-Mesa GLES3. These results do not constitute a real browser rendering/touch test.
+## Deployment and remaining verification
 
-The original failure is verified in the cloud browser. The repaired branch still
-requires HTTPS preview browser verification. Local `file:` navigation is blocked
-by cloud browser URL policy. Vercel branch previews remain protected; no access
-protection has been disabled or bypass granted. A successful signed-in session or
-explicit authorization for a time-limited deployment share link is needed to test
-that deployment. Such a link grants access to the full PR preview, not only this
-route. The production alias remains on the owner's merged commit until a repair
-is reviewed and merged by the owner.
+This change is prepared in Draft PR #9 on `fix/fluid-mobile-compatibility`.
+It has not been merged by the agent. Preview the root `/` route of its Vercel
+Preview deployment to review the actual homepage, rather than only `/fluid-preview/`.
 
-## Browser checks before merging
+Vercel previews are protected by authentication. Automatic approval review previously
+rejected a deployment share link without specific authorization; none has been
+created for this change. Local file navigation is also blocked by cloud browser URL
+policy. Full browser visual/pointer/native-touch/performance checks therefore remain
+pending an authorized preview session or temporary share link. No protection settings
+have been disabled. A share link grants access to the full preview deployment.
 
-Open the repaired HTTPS `/fluid-preview/` route. Check Settings shows either
-`WebGL2 fluid` or `Canvas2D fluid`, advancing frames and `Runtime errors: 0`.
-With ambient disabled, clear the canvas and verify mouse/touch input creates
-continuous curling red smoke. Test mobile portrait/landscape, touch cancellation,
-controls, quality, reduced motion, pause/resume and tab switching. Inspect browser
-console and actual frame rate; adjust the effect if visible failures remain.
+Netlify's `/fluid-preview/` returned 404 in the earlier inspection; a GitHub merge
+and successful Vercel deployment do not establish that Netlify production is updated.
+No Netlify production deployment is performed by this PR.
+
+Before merging, verify the homepage renders curling red smoke under pointer/touch,
+ordinary links/forms and mobile vertical/horizontal scrolling remain usable, dialogs
+and menu appear above the atmosphere, reduced-motion disables it, and browser console
+has no errors introduced by the atmosphere. Check both GPU and fallback paths where
+available. The lab diagnostics can help identify the renderer and frame rate.
 
 Algorithm reference: Mark Harris,
 [GPU Gems chapter 38](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu).
