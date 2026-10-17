@@ -1,11 +1,14 @@
-/* Zyberlane Fluid Lab: original grid-based incompressible fluid solver.
+/* Zyberlane homepage / Fluid Lab: grid-based incompressible fluid solver.
  * Algorithm background: Mark Harris, GPU Gems chapter 38 (Stable Fluids).
- * No particle sprites, external libraries, telemetry, or production-page imports.
+ * No particle sprites, external libraries or telemetry.
  */
 (() => {
   'use strict';
   const byId = id => document.getElementById(id);
-  const canvas = byId('fluid');
+  let canvas = byId('fluid');
+  if (!canvas) return;
+  const homeMode = canvas.dataset.fluidHome === '';
+  const text = (element, value) => { if (element) element.textContent = value; };
   const status = byId('status');
   const engine = byId('engine');
   const metrics = byId('metrics');
@@ -14,8 +17,8 @@
   const pauseButton = byId('pause');
   const burstButton = byId('burst');
   const clearButton = byId('clear');
-  const ambient = byId('ambient');
-  const quality = byId('quality');
+  const ambient = byId('ambient') || { checked: true };
+  const quality = byId('quality') || { value: 'auto' };
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const coarse = matchMedia('(pointer: coarse)');
   const pointers = new Map();
@@ -26,11 +29,14 @@
   let raf = 0, lastTime = 0, elapsed = 0, lastAmbient = 0, lastMetrics = 0;
   let sampleFrames = 0, sampleTime = 0, adaptiveLow = false;
   let gl, programs, velocity, dye, pressure, divergence, curl;
+  let cpu = null;
   let targets = [];
+  let initialized = false, homeReady = !homeMode, boundInputTarget = null;
 
   function reportError(message) {
     errorCount++;
-    health.textContent = `Runtime errors: ${errorCount} · ${String(message).slice(0, 140)}`;
+    text(health, `Runtime errors: ${errorCount} · ${String(message).slice(0, 140)}`);
+    canvas.dataset.fluidErrors = String(errorCount);
   }
   addEventListener('error', event => reportError(event.message || 'Resource load failed'));
   addEventListener('unhandledrejection', event => reportError(event.reason?.message || 'Unhandled promise rejection'));
@@ -118,7 +124,7 @@
         if (vUv.y < uTexel.y || vUv.y > 1.0 - uTexel.y) v.y = 0.0;
         fragColor = vec4(v, 0, 1);
       }`,
-    display: `uniform sampler2D uDye; uniform vec2 uTexel;
+    display: `uniform sampler2D uDye; uniform vec2 uTexel; uniform vec3 uColor; uniform float uBase;
       void main() {
         float d = max(texture(uDye, vUv).r, 0.0);
         float l = texture(uDye, vUv - vec2(uTexel.x, 0)).r;
@@ -128,7 +134,7 @@
         vec3 normal = normalize(vec3((r-l)*2.0, (t-b)*2.0, 0.65));
         float light = 0.74 + 0.26 * max(dot(normal, normalize(vec3(-0.4, 0.65, 1.0))), 0.0);
         float ink = (1.0 - exp(-d * 1.25)) * light;
-        fragColor = vec4(vec3(0.01176) + ink * vec3(0.93, 0.012, 0.025), 1.0);
+        fragColor = vec4(vec3(uBase) + ink * uColor, 1.0);
       }`
   };
 
@@ -194,9 +200,17 @@
   }
 
   function allocate() {
+    const low = quality.value === 'low' || (quality.value === 'auto' && (coarse.matches || adaptiveLow));
+    if (cpu) {
+      const resolution = quality.value === 'high' ? 152 : low ? (homeMode ? 80 : 96) : (homeMode ? 112 : 128);
+      const dimensions = size(resolution);
+      cpu.resize(...dimensions, low ? 12 : 16);
+      text(engine, `Renderer: Canvas2D fluid · grid ${dimensions.join('×')}${low ? ' · low' : ''}`);
+      canvas.dataset.renderer = 'canvas2d-fluid';
+      return;
+    }
     for (const item of targets) { gl.deleteTexture(item.texture); gl.deleteFramebuffer(item.fbo); }
     targets = [];
-    const low = quality.value === 'low' || (quality.value === 'auto' && (coarse.matches || adaptiveLow));
     const simSize = size(low ? 96 : 144);
     const dyeSize = size(low ? 384 : 640);
     velocity = doubleTarget(...simSize, gl.LINEAR);
@@ -204,7 +218,7 @@
     pressure = doubleTarget(...simSize, gl.NEAREST);
     divergence = target(...simSize, gl.NEAREST);
     curl = target(...simSize, gl.NEAREST);
-    engine.textContent = `Renderer: WebGL2 fluid · grid ${simSize.join('×')} · dye ${dyeSize.join('×')}${low ? ' · low' : ''}`;
+    text(engine, `Renderer: WebGL2 fluid · grid ${simSize.join('×')} · dye ${dyeSize.join('×')}${low ? ' · low' : ''}`);
     canvas.dataset.renderer = 'webgl2-fluid';
   }
 
@@ -227,12 +241,12 @@
   }
 
   function resize() {
-    if (!gl || lost || failed) return;
+    if ((!gl && !cpu) || lost || failed) return;
     const ratio = Math.min(devicePixelRatio || 1, coarse.matches ? 1.25 : 1.5);
     const scale = Math.min(ratio, 1920 / Math.max(innerWidth, innerHeight));
     const width = Math.max(1, Math.round(innerWidth * scale));
     const height = Math.max(1, Math.round(innerHeight * scale));
-    if (canvas.width === width && canvas.height === height && velocity) return;
+    if (canvas.width === width && canvas.height === height && (velocity || cpu?.width)) return;
     canvas.width = width; canvas.height = height;
     pointers.clear(); pending.length = 0; allocate();
     if (!paused) seed();
@@ -240,6 +254,7 @@
   }
 
   function splat(x, y, dx, dy, strength = 0.65, radius = 0.00065) {
+    if (cpu) { cpu.splat(x, y, dx, dy, strength, radius); splatCount++; return; }
     const common = { uPoint: [Math.max(0, Math.min(1, x)), Math.max(0, Math.min(1, y))], uAspect: canvas.width / canvas.height, uRadius: radius };
     draw(programs.splat, velocity.write, { uTarget: velocity.read }, {
       ...common, uColor: [Math.max(-250, Math.min(250, dx)), Math.max(-250, Math.min(250, dy)), 0]
@@ -250,6 +265,8 @@
   }
 
   function seed() {
+    // Demo bursts belong to the lab; homepage allocation/resize must stay empty.
+    if (homeMode) return;
     for (let i = 0; i < 7; i++) {
       const angle = i / 7 * Math.PI * 2;
       splat(0.5 + Math.cos(angle) * 0.27 / Math.max(1, canvas.width / canvas.height),
@@ -259,7 +276,7 @@
 
   function step(dt) {
     while (pending.length) splat(...pending.shift());
-    if (ambient.checked && elapsed - lastAmbient > 0.12) {
+    if (!homeMode && ambient.checked && elapsed - lastAmbient > 0.12) {
       lastAmbient = elapsed;
       const a = elapsed * 0.26;
       for (const offset of [0, Math.PI]) {
@@ -267,6 +284,7 @@
           -Math.sin(a + offset) * 16, Math.cos(a * 1.3 + offset) * 20, 0.075, 0.0006);
       }
     }
+    if (cpu) { cpu.step(dt); return; }
     const texel = velocity.read.texel;
     draw(programs.advect, velocity.write, { uVelocity: velocity.read, uSource: velocity.read }, { uVelocityTexel: texel, uDt: dt, uDecay: 0.32 });
     velocity.swap();
@@ -286,13 +304,20 @@
     dye.swap();
   }
 
-  function render() { draw(programs.display, null, { uDye: dye.read }, { uTexel: dye.read.texel }); }
+  function render() {
+    if (cpu) cpu.render();
+    else draw(programs.display, null, { uDye: dye.read }, {
+      uTexel: dye.read.texel,
+      uColor: homeMode ? [196 / 255, 22 / 255, 42 / 255] : [0.93, 0.012, 0.025],
+      uBase: homeMode ? 0 : 0.01176
+    });
+  }
 
   function updateStatus() {
-    pauseButton.textContent = paused ? 'Play' : 'Pause';
-    pauseButton.setAttribute('aria-pressed', String(paused));
-    status.textContent = failed ? 'Fluid unavailable · WebGL2 required' : lost ? 'Graphics interrupted · waiting to restore'
-      : paused ? (motion.matches ? 'Reduced motion · press Play to explore' : 'Paused · press Play to continue') : 'Live fluid · move or drag to stir';
+    text(pauseButton, paused ? 'Play' : 'Pause');
+    pauseButton?.setAttribute('aria-pressed', String(paused));
+    text(status, failed ? 'Fluid unavailable · try another browser' : lost ? 'Graphics interrupted · waiting to restore'
+      : paused ? (motion.matches ? 'Reduced motion · press Play to explore' : 'Paused · press Play to continue') : 'Live fluid · move or drag to stir');
     canvas.dataset.state = failed ? 'unavailable' : lost ? 'context-lost' : paused ? 'paused' : 'running';
   }
 
@@ -301,7 +326,7 @@
     raf = 0; lastTime = 0; pointers.clear(); pending.length = 0;
   }
   function start() {
-    if (raf || paused || lost || failed || document.hidden) return;
+    if (!initialized || !homeReady || raf || paused || lost || failed || document.hidden) return;
     raf = requestAnimationFrame(frame);
   }
   function frame(now) {
@@ -314,14 +339,23 @@
       step(dt); render(); frameCount++; sampleTime += rawDt; sampleFrames++;
       if (now - lastMetrics >= 750) {
         const fps = Math.round(sampleFrames / Math.max(sampleTime, 0.001));
-        metrics.textContent = `Frames: ${frameCount} · ${fps} fps · ${canvas.width}×${canvas.height}`;
-        input.textContent = `Input: ${lastInput} · moves: ${moveCount} · splats: ${splatCount}`;
+        text(metrics, `Frames: ${frameCount} · ${fps} fps · ${canvas.width}×${canvas.height}`);
+        text(input, `Input: ${lastInput} · moves: ${moveCount} · splats: ${splatCount}`);
+        if (homeMode) {
+          canvas.dataset.fluidFrames = String(frameCount);
+          canvas.dataset.fluidInput = lastInput;
+          canvas.dataset.fluidMoves = String(moveCount);
+        }
         if (frameCount > 150 && quality.value === 'auto' && !adaptiveLow && !coarse.matches && fps < 38) {
           adaptiveLow = true; allocate(); seed();
         }
         sampleTime = 0; sampleFrames = 0; lastMetrics = now;
       }
-    } catch (error) { fail(error); return; }
+    } catch (error) {
+      if (!cpu) { try { activateFallback(error); } catch (fallbackError) { fail(fallbackError); } }
+      else fail(error);
+      return;
+    }
     start();
   }
 
@@ -340,68 +374,123 @@
       pending.push([previous.x + dx * t, previous.y + dy * t, dx * 4200, dy * 4200, 0.4, touch ? 0.001 : 0.00065]);
     }
   }
-  canvas.addEventListener('pointerdown', event => {
-    if (paused || lost || failed || (event.pointerType === 'mouse' && event.button !== 0)) return;
-    const current = point(event);
-    pointers.set(event.pointerId, current); canvas.setPointerCapture(event.pointerId);
-    lastInput = event.pointerType || 'mouse';
-    if (pending.length < 24) pending.push([current.x, current.y, 0, 30, 0.7, 0.001]);
-  });
-  canvas.addEventListener('pointermove', event => {
-    if (paused || lost || failed) return;
-    const touch = event.pointerType === 'touch';
-    if (event.pointerType !== 'mouse' && !pointers.has(event.pointerId)) return;
-    const current = point(event), previous = pointers.get(event.pointerId);
-    lastInput = event.pointerType || 'mouse'; moveCount++;
-    if (previous && current.time - previous.time < 180) queueStroke(previous, current, touch);
-    else if (pending.length < 24) pending.push([current.x, current.y, 0, 12, 0.4, touch ? 0.001 : 0.00065]);
-    pointers.set(event.pointerId, current);
-  });
-  function release(event) { pointers.delete(event.pointerId); }
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, release);
-  canvas.addEventListener('pointerleave', event => { if (!canvas.hasPointerCapture(event.pointerId)) release(event); });
+  function bindCanvasEvents() {
+    const inputTarget = homeMode ? document : canvas;
+    if (boundInputTarget !== inputTarget) {
+      boundInputTarget = inputTarget;
+      inputTarget.addEventListener('pointerdown', event => {
+        if (homeMode && !event.isTrusted) return;
+        if (paused || lost || failed || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        if (homeMode && event.pointerType === 'touch') return;
+        const current = point(event);
+        pointers.set(event.pointerId, current);
+        if (!homeMode) {
+          try { canvas.setPointerCapture(event.pointerId); } catch { /* Contact may have ended before capture. */ }
+        }
+        lastInput = event.pointerType || 'mouse';
+        if (pending.length < 24) pending.push([current.x, current.y, 0, 30, 0.7, 0.001]);
+      }, { passive: true });
+      inputTarget.addEventListener('pointermove', event => {
+        if (homeMode && !event.isTrusted) return;
+        // Layout/viewport changes can dispatch trusted mouse events without movement.
+        if (homeMode && event.pointerType === 'mouse' && event.movementX === 0 && event.movementY === 0) return;
+        if (paused || lost || failed) return;
+        if (homeMode && event.pointerType === 'touch') return;
+        const touch = event.pointerType === 'touch';
+        if (event.pointerType !== 'mouse' && !pointers.has(event.pointerId)) return;
+        const current = point(event), previous = pointers.get(event.pointerId);
+        lastInput = event.pointerType || 'mouse'; moveCount++;
+        if (previous && current.time - previous.time < 180) queueStroke(previous, current, touch);
+        else if (pending.length < 24) pending.push([current.x, current.y, 0, 12, 0.4, touch ? 0.001 : 0.00065]);
+        pointers.set(event.pointerId, current);
+      }, { passive: true });
+      function release(event) { pointers.delete(event.pointerId); }
+      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) inputTarget.addEventListener(type, release, { passive: true });
+      inputTarget.addEventListener('pointerleave', event => { if (homeMode || !canvas.hasPointerCapture(event.pointerId)) release(event); }, { passive: true });
+      if (homeMode) {
+        // Passive touch events keep following a finger during native page scrolling.
+        // Ignore touch Pointer Events above so each contact is processed once.
+        for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
+          inputTarget.addEventListener(type, event => {
+            if (!event.isTrusted) return;
+            for (const touch of event.changedTouches) {
+              const key = `touch:${touch.identifier}`;
+              if (type === 'touchend' || type === 'touchcancel') { pointers.delete(key); continue; }
+              if (paused || lost || failed) continue;
+              const current = point({ clientX: touch.clientX, clientY: touch.clientY, timeStamp: event.timeStamp });
+              const previous = pointers.get(key);
+              lastInput = 'touch';
+              if (type === 'touchmove') {
+                if (!previous) continue;
+                moveCount++;
+                queueStroke(previous, current, true);
+              } else if (pending.length < 24) pending.push([current.x, current.y, 0, 30, 0.7, 0.001]);
+              pointers.set(key, current);
+            }
+          }, { passive: true });
+        }
+      }
+    }
+    canvas.addEventListener('webglcontextlost', event => {
+      event.preventDefault();
+      if (cpu || failed) return;
+      try { activateFallback(new Error('GPU context interrupted')); } catch (error) { fail(error); }
+    });
+  }
   addEventListener('blur', () => { pointers.clear(); pending.length = 0; });
 
-  pauseButton.addEventListener('click', () => {
+  pauseButton?.addEventListener('click', () => {
     if (failed || lost) return;
     paused = !paused;
     if (paused) stop(); else start();
     updateStatus();
   });
-  burstButton.addEventListener('click', () => {
+  burstButton?.addEventListener('click', () => {
     if (failed || lost) return;
     if (paused) { paused = false; updateStatus(); }
     seed(); render(); start();
   });
-  clearButton.addEventListener('click', () => {
+  clearButton?.addEventListener('click', () => {
     if (failed || lost) return;
     pointers.clear(); pending.length = 0; ambient.checked = false;
+    if (cpu) { cpu.clear(); render(); return; }
     for (const item of targets) { gl.bindFramebuffer(gl.FRAMEBUFFER, item.fbo); gl.clear(gl.COLOR_BUFFER_BIT); }
     render();
   });
-  quality.addEventListener('change', () => {
+  quality.addEventListener?.('change', () => {
     if (failed || lost) return;
     try { adaptiveLow = false; allocate(); if (!paused) seed(); render(); }
     catch (error) { fail(error); }
   });
   motion.addEventListener('change', event => {
     paused = event.matches;
-    if (paused) stop(); else start();
+    if (homeMode) canvas.hidden = paused;
+    if (paused) stop(); else { if (!initialized) boot(); start(); }
     updateStatus();
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else start(); });
   addEventListener('resize', () => { try { resize(); } catch (error) { fail(error); } }, { passive: true });
-  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); lost = true; stop(); updateStatus(); });
-  canvas.addEventListener('webglcontextrestored', () => {
-    lost = false; targets = []; velocity = null;
-    try { initialize(); updateStatus(); start(); } catch (error) { fail(error); }
-  });
+
+  function activateFallback(reason) {
+    stop();
+    // A canvas that acquired WebGL cannot acquire 2D. Replace the element and
+    // rebind its input handlers; otherwise the fallback would fail on this path.
+    const replacement = canvas.cloneNode(false);
+    canvas.replaceWith(replacement);
+    canvas = replacement;
+    cpu = new window.ZyberlaneCPUFluid(canvas, homeMode ? { color: [196, 22, 42], background: 0 } : {});
+    gl = null; velocity = null; targets = []; lost = false; failed = false;
+    bindCanvasEvents(); resize(); updateStatus(); start();
+    console.info('[Zyberlane fluid] Canvas2D fluid active:', reason.message);
+  }
 
   function fail(error) {
     failed = true; stop(); reportError(error.message);
-    engine.textContent = 'Renderer unavailable · WebGL2 + floating-point textures required';
-    for (const control of [pauseButton, burstButton, clearButton, quality, ambient]) control.disabled = true;
-    updateStatus(); console.error('[Zyberlane fluid]', error);
+    text(engine, 'Renderer unavailable · this browser could not initialize graphics');
+    for (const control of [pauseButton, burstButton, clearButton, quality, ambient]) if (control) control.disabled = true;
+    updateStatus();
+    if (homeMode) { canvas.hidden = true; console.warn('[Zyberlane fluid] Atmosphere disabled:', error.message); }
+    else console.error('[Zyberlane fluid]', error);
   }
   function initialize() {
     gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'low-power' });
@@ -414,5 +503,27 @@
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     resize(); updateStatus();
   }
-  try { initialize(); start(); } catch (error) { fail(error); }
+  function boot() {
+    if (initialized || failed) return;
+    initialized = true;
+    bindCanvasEvents();
+    try { initialize(); start(); }
+    catch (error) { try { activateFallback(error); } catch (fallbackError) { fail(fallbackError); } }
+  }
+  function beginHome() {
+    homeReady = true;
+    if (motion.matches) { canvas.hidden = true; canvas.dataset.state = 'reduced-motion'; return; }
+    boot(); start();
+  }
+  if (homeMode) {
+    const loader = byId('loadingScreen');
+    if (loader && !loader.classList.contains('loading-done') && typeof MutationObserver === 'function') {
+      canvas.dataset.state = 'waiting-for-page';
+      const observer = new MutationObserver(() => {
+        if (!loader.classList.contains('loading-done') && loader.isConnected) return;
+        observer.disconnect(); beginHome();
+      });
+      observer.observe(loader, { attributes: true, attributeFilter: ['class'] });
+    } else beginHome();
+  } else boot();
 })();
