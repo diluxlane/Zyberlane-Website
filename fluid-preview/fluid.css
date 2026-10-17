@@ -1,0 +1,55 @@
+:root { color-scheme: dark; --red: #e50000; --ink: #030303; --white: #f5f5f5; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--ink); color: var(--white); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { min-height: 100svh; }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.veil { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 15%, #00000012 65%, #00000075 100%); }
+header { position: fixed; inset: max(30px, env(safe-area-inset-top)) 36px auto; display: flex; justify-content: space-between; align-items: center; z-index: 2; pointer-events: none; }
+.wordmark { color: var(--white); text-decoration: none; font-size: 22px; font-weight: 650; letter-spacing: -.06em; pointer-events: auto; }
+.wordmark span, h1 span { color: var(--red); }
+.lab-label, .eyebrow, .live-state, .panel-label, .diagnostics, .experiment-note { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.lab-label { font-size: 10px; letter-spacing: .15em; color: #b0b0b0; }
+.edition { color: #606060; margin-left: 8px; }
+.dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--red); box-shadow: 0 0 12px #e5000080; margin-right: 9px; vertical-align: middle; }
+main { position: relative; height: 100%; display: grid; place-items: center; pointer-events: none; }
+.intro { text-align: center; padding: 28px; transform: translateY(-5px); }
+.eyebrow { font-size: 10px; letter-spacing: .2em; color: #9a9a9a; margin: 0 0 24px; }
+h1 { font-size: clamp(52px, 10.5vw, 144px); font-weight: 650; letter-spacing: -.075em; line-height: .95; margin: 0 0 26px; }
+.description { color: #b4b4b4; font-size: clamp(13px, 1.35vw, 16px); line-height: 1.7; margin: 0; text-shadow: 0 2px 14px #000; }
+footer { position: fixed; bottom: max(28px, env(safe-area-inset-bottom)); left: 36px; right: 36px; display: flex; justify-content: space-between; align-items: center; gap: 24px; z-index: 3; pointer-events: none; }
+.live-state { color: #a0a0a0; font-size: 10px; letter-spacing: .035em; max-width: 45%; line-height: 1.6; }
+.controls { display: flex; align-items: center; gap: 6px; pointer-events: auto; }
+button, summary, select { font-family: inherit; font-size: 11px; font-weight: 500; line-height: 1.2; color: #bababa; background: #101010b8; border: 1px solid #ffffff1c; border-radius: 999px; padding: 11px 15px; cursor: pointer; white-space: nowrap; }
+button:hover, summary:hover { border-color: #ffffff50; color: white; background: #161616; }
+button:focus-visible, summary:focus-visible, select:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--red); outline-offset: 4px; }
+button[aria-pressed="true"] { border-color: #e5000080; color: white; }
+button:disabled { opacity: .4; cursor: default; }
+#burst { color: #eee; }
+#burst span { margin-left: 9px; color: #ff3535; }
+details { position: relative; }
+summary { list-style: none; }
+summary::-webkit-details-marker { display: none; }
+details[open] summary { border-color: #e5000080; }
+.settings-panel { position: absolute; right: 0; bottom: calc(100% + 15px); width: 280px; max-width: calc(100vw - 32px); border: 1px solid #ffffff20; border-radius: 14px; background: #0b0b0bf5; padding: 20px; box-shadow: 0 8px 40px #0008; }
+.panel-label { font-size: 9px; letter-spacing: .13em; color: #999; margin: 0 0 18px; }
+.setting { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin: 12px 0; color: #ddd; font-size: 12px; }
+select { padding: 7px 10px; }
+input { accent-color: var(--red); width: 16px; height: 16px; }
+.diagnostics { padding-top: 10px; margin-top: 16px; border-top: 1px solid #ffffff14; }
+.diagnostics p { font-size: 9px; color: #888; line-height: 1.65; margin: 5px 0; overflow-wrap: anywhere; }
+.experiment-note { font-size: 9px; color: #777; line-height: 1.8; margin: 14px 0 0; }
+.fallback { position: fixed; bottom: 24%; left: 24px; right: 24px; color: #ddd; text-align: center; font-size: 13px; }
+@media (max-width: 640px) {
+  header { inset: max(24px, env(safe-area-inset-top)) 22px auto; }
+  .wordmark { font-size: 20px; }
+  .lab-label { font-size: 9px; }
+  .edition { display: none; }
+  h1 { font-size: clamp(48px, 14vw, 86px); }
+  .eyebrow { font-size: 8px; margin-bottom: 22px; }
+  .description { font-size: 13px; }
+  footer { left: 20px; right: 20px; bottom: max(22px, env(safe-area-inset-bottom)); flex-direction: column; align-items: stretch; gap: 15px; }
+  .live-state { max-width: 100%; text-align: center; font-size: 9px; }
+  .controls { justify-content: center; gap: 5px; }
+  button, summary { padding: 12px 13px; }
+  .settings-panel { right: -1px; }
+}
