@@ -1073,7 +1073,7 @@
   })();
 </script>
 <!-- ================= ADDITIVE: CMS (Supabase-backed content) ================= -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js" integrity="sha384-UagCvVPT5XXA0Hx+nJYUAGBFseHT9zBgpJMSebsAxl9lciTwbT+39j5VfRjdP5Tp" crossorigin="anonymous"></script>
 <script>
 (function(){
   var SUPABASE_URL = 'https://dgolqzznwsjjuuuoygug.supabase.co';
@@ -1096,6 +1096,13 @@
     var trimmed = url.trim();
     if (/^https?:\/\//i.test(trimmed)) return trimmed;
     return null;
+  }
+
+  // Encode database text before inserting it into an HTML template.
+  function escapeHtml(value){
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function(c){
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
 
   // ---------- site_settings: plain text/attribute swaps ----------
@@ -1224,8 +1231,8 @@
       card.className = 'skill-card package-card reveal in' + (p.is_featured ? ' featured' : '');
       var priceHtml = '';
       if (p.price !== null && p.price !== undefined){
-        priceHtml = '<div class="price">' + (p.currency || 'USD') + ' ' + Number(p.price).toLocaleString() +
-          '<span> / ' + (p.billing_period || 'project') + '</span></div>';
+        priceHtml = '<div class="price">' + escapeHtml(p.currency || 'USD') + ' ' + Number(p.price).toLocaleString() +
+          '<span> / ' + escapeHtml(p.billing_period || 'project') + '</span></div>';
       } else {
         priceHtml = '<div class="price">Contact for pricing</div>';
       }
@@ -1342,7 +1349,7 @@
     safeFetch(sb.from('services').select('*').eq('is_active', true).order('sort_order')),
     safeFetch(sb.from('packages').select('*').eq('is_active', true).order('sort_order')),
     safeFetch(sb.from('testimonials').select('*').eq('is_active', true).order('sort_order')),
-    safeFetch(sb.from('projects').select('*').eq('is_public', true).order('sort_order').order('created_at'))
+    safeFetch(sb.from('projects').select('id, name, slug, category, description, live_url, cover_image_url, sort_order, created_at').eq('is_public', true).order('sort_order').order('created_at'))
   ]).then(function(results){
     var settings = results[0].value;
     var services = results[1].value;
@@ -1474,7 +1481,7 @@
       setStatus('Thanks, ' + name.split(' ')[0] + '. Your request has been sent. We\'ll be in touch soon.', 'success');
       form.reset();
     } catch (err){
-      setStatus('Something went wrong: ' + err.message + '. Please try again, or email/WhatsApp us directly.', 'error');
+      setStatus('Something went wrong. Please try again, or email/WhatsApp us directly.', 'error');
     } finally {
       submitBtn.disabled = false;
     }

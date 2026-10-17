@@ -1,0 +1,46 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'sha256-+Rl7CsuCsPM15iDlz3yytpjeq3iBP/pdNk0RaprrB5A=' 'sha256-/L2GFUN6FlsXGojBSnJsJC87NPXznuWAS2VD0cvIMkg=' 'sha256-1c0cFOfDB18EHExA/si68QP6+G908jNnqCvmngU0aLo=' 'sha256-BRLCtWcFjznFC6A4B6pet2b+iv7OeGC/ErZCiwk2GWQ=' 'sha256-SzPFK/Mg6bP4L+4LqmgHm217S3CRBPtVh0Ua3fGi2d4=' 'sha256-ahwQPssaRtYAd/P9lhOgwgRwHLsKKbvDmQ7lEaUpTKE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://dgolqzznwsjjuuuoygug.supabase.co wss://dgolqzznwsjjuuuoygug.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000"
+        }
+      ]
+    },
+    {
+      "source": "/admin/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ]
+}
