@@ -1,4 +1,4 @@
-// Exercises the actual CPU solver and app fallback/lifecycle with Canvas stubs.
+// Exercises the actual CPU solver plus WebGL call/resource and input/lifecycle harnesses.
 // This is regression coverage, not a substitute for real browser/device testing.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -8,7 +8,56 @@ const root = path.resolve(__dirname, '../..');
 const cpuSource = fs.readFileSync(path.join(root, 'assets/fluid-cpu.js'), 'utf8');
 const appSource = fs.readFileSync(path.join(root, 'assets/fluid.js'), 'utf8');
 
-function harness({ noGL = false, shaderFailure = false, reduced = false, touch = false, home = false, loading = false } = {}) {
+// Records WebGL calls/resources without pretending to rasterize or benchmark a GPU.
+function mockGL({ supported, shaderFailure, webgl1, linear }) {
+  let serial = 0, activeProgram, boundTexture;
+  const live = Object.fromEntries(['Texture', 'Framebuffer', 'Shader', 'Program', 'Buffer'].map(kind => [kind, new Set()]));
+  const programs = [], colors = [], contexts = [], sizes = [], physics = [];
+  let splatDraws = 0, contextLosses = 0;
+  const gl = {};
+  const constants = ['TEXTURE0', 'TEXTURE_2D', 'TEXTURE_MIN_FILTER', 'TEXTURE_MAG_FILTER', 'TEXTURE_WRAP_S', 'TEXTURE_WRAP_T', 'NEAREST', 'LINEAR', 'CLAMP_TO_EDGE', 'RGBA16F', 'RGBA', 'RG16F', 'RG', 'R16F', 'RED', 'HALF_FLOAT', 'FRAMEBUFFER', 'COLOR_ATTACHMENT0', 'FRAMEBUFFER_COMPLETE', 'COLOR_BUFFER_BIT', 'ARRAY_BUFFER', 'ELEMENT_ARRAY_BUFFER', 'STATIC_DRAW', 'FLOAT', 'TRIANGLES', 'UNSIGNED_SHORT', 'VERTEX_SHADER', 'FRAGMENT_SHADER', 'COMPILE_STATUS', 'LINK_STATUS', 'ACTIVE_UNIFORMS', 'MAX_TEXTURE_SIZE', 'BLEND', 'ONE', 'ONE_MINUS_SRC_ALPHA'];
+  constants.forEach((name, i) => { gl[name] = i + 1; });
+  if (!webgl1) gl.drawBuffers = () => {};
+  for (const kind of Object.keys(live)) {
+    gl[`create${kind}`] = () => { const obj = { kind, id: ++serial }; live[kind].add(obj); return obj; };
+    gl[`delete${kind}`] = obj => { live[kind].delete(obj); };
+  }
+  Object.assign(gl, {
+    getExtension(name) {
+      if (name === 'WEBGL_lose_context') return { loseContext() { contextLosses++; } };
+      if (name === 'OES_texture_half_float') return supported ? { HALF_FLOAT_OES: gl.HALF_FLOAT } : null;
+      if (name.includes('linear')) return linear ? {} : null;
+      return supported ? {} : null;
+    },
+    getParameter: () => 4096,
+    bindTexture(target, texture) { boundTexture = texture; },
+    texImage2D(target, level, format, width, height) { sizes.push([width, height]); if (boundTexture) boundTexture.size = [width, height]; },
+    checkFramebufferStatus: () => supported ? gl.FRAMEBUFFER_COMPLETE : 0,
+    shaderSource(shader, source) { shader.source = source; },
+    getShaderParameter: () => !shaderFailure,
+    getShaderInfoLog: () => 'Test compiler failure',
+    attachShader(program, shader) { (program.shaders ||= []).push(shader); },
+    linkProgram(program) {
+      const text = program.shaders.map(shader => shader.source).join('\n');
+      program.names = [...new Set([...text.matchAll(/uniform\s+(?:(?:lowp|mediump|highp)\s+)?\w+\s+(\w+)\s*;/g)].map(match => match[1]))];
+      program.isSplat = program.names.includes('radius');
+      programs.push(program);
+    },
+    getProgramParameter: (program, name) => name === gl.ACTIVE_UNIFORMS ? program.names.length : true,
+    getProgramInfoLog: () => '',
+    getActiveUniform: (program, i) => ({ name: program.names[i] }),
+    getUniformLocation: (program, name) => ({ name }),
+    useProgram(program) { activeProgram = program; },
+    uniform1f(location, value) { physics.push([location.name, value]); },
+    uniform3f(location, ...value) { if (location.name === 'color') colors.push(value); },
+    drawElements() { if (activeProgram?.isSplat) splatDraws++; }
+  });
+  for (const name of ['clearColor', 'clear', 'disable', 'enable', 'texParameteri', 'activeTexture', 'bindFramebuffer', 'framebufferTexture2D', 'viewport', 'compileShader', 'bindAttribLocation', 'bindBuffer', 'bufferData', 'vertexAttribPointer', 'enableVertexAttribArray', 'uniform1i', 'uniform2f', 'blendFunc']) gl[name] = () => {};
+  return { gl, live, programs, colors, contexts, sizes, physics,
+    get splatDraws() { return splatDraws; }, get contextLosses() { return contextLosses; } };
+}
+
+function harness({ noGL = false, gpu = false, webgl1 = false, linear = true, shaderFailure = false, reduced = false, touch = false, home = false, loading = false, width, height } = {}) {
   let now = 0, nextId = 1, rendered = 0, splats = 0;
   const fluids = [];
   const callbacks = new Map(), elements = new Map(), winEvents = {}, docEvents = {}, errors = [];
@@ -18,11 +67,13 @@ function harness({ noGL = false, shaderFailure = false, reduced = false, touch =
     createImageData: (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }),
     putImageData() {}, drawImage() { rendered++; }
   };
-  const gl = {
-    getExtension: () => shaderFailure ? {} : null,
-    clearColor() {}, disable() {}, createShader: () => ({}), shaderSource() {}, compileShader() {},
-    getShaderParameter: () => false, getShaderInfoLog: () => 'Test compiler failure', deleteShader() {}
-  };
+  const graphics = mockGL({ supported: gpu || shaderFailure, shaderFailure, webgl1, linear });
+  const gl = graphics.gl;
+  let activeCanvas;
+  Object.defineProperties(gl, {
+    drawingBufferWidth: { get: () => activeCanvas.width },
+    drawingBufferHeight: { get: () => activeCanvas.height }
+  });
   class Element {
     constructor(id) {
       this.id = id; this.dataset = {}; this.events = {}; this.textContent = '';
@@ -33,13 +84,16 @@ function harness({ noGL = false, shaderFailure = false, reduced = false, touch =
       this.classList = { contains: () => loadingDone };
     }
     addEventListener(type, callback) { this.events[type] = callback; }
+    removeEventListener(type, callback) { if (this.events[type] === callback) delete this.events[type]; }
     setAttribute(name, value) { this[name] = value; }
-    getBoundingClientRect() { return { left: 0, top: 0, width: touch ? 390 : 1280, height: 844 }; }
+    getBoundingClientRect() { return { left: 0, top: 0, width: sandbox.innerWidth, height: sandbox.innerHeight }; }
     getContext(type) {
-      if (type === 'webgl2' && noGL) return null;
+      const webgl = type.includes('webgl');
+      if (webgl && (noGL || (webgl1 && type === 'webgl2'))) return null;
       if (this.contextType && this.contextType !== type) return null;
       this.contextType = type;
-      return type === 'webgl2' ? gl : context2D;
+      if (webgl) { activeCanvas = this; graphics.contexts.push(type); }
+      return webgl ? gl : context2D;
     }
     cloneNode() { const clone = new Element(this.id); clone.dataset = { ...this.dataset }; return clone; }
     replaceWith(other) { elements.set(this.id, other); }
@@ -56,14 +110,16 @@ function harness({ noGL = false, shaderFailure = false, reduced = false, touch =
     addEventListener: (type, fn, options) => {
       docEvents[type] = fn;
       (docRegistrations[type] ||= []).push(options);
-    }
+    },
+    removeEventListener: (type, fn) => { if (docEvents[type] === fn) delete docEvents[type]; }
   };
   const sandbox = {
-    window: {}, document, innerWidth: touch ? 390 : 1280, innerHeight: 844, devicePixelRatio: 3,
+    window: {}, document, innerWidth: width ?? (touch ? 390 : 1280), innerHeight: height ?? 844, devicePixelRatio: 3,
     matchMedia: query => {
       if (!queries.has(query)) queries.set(query, {
         matches: query.includes('reduced-motion') ? reduced : touch,
-        addEventListener(type, fn) { this[type] = fn; }
+        addEventListener(type, fn) { this[type] = fn; },
+        removeEventListener(type, fn) { if (this[type] === fn) delete this[type]; }
       });
       return queries.get(query);
     },
@@ -72,6 +128,7 @@ function harness({ noGL = false, shaderFailure = false, reduced = false, touch =
       observe() {} disconnect() {}
     },
     addEventListener: (type, fn) => { winEvents[type] = fn; },
+    removeEventListener: (type, fn) => { if (winEvents[type] === fn) delete winEvents[type]; },
     requestAnimationFrame: fn => { const id = nextId++; callbacks.set(id, fn); return id; },
     cancelAnimationFrame: id => callbacks.delete(id),
     console: { info() {}, warn: (...args) => errors.push(args), error: (...args) => errors.push(args) }
@@ -85,7 +142,7 @@ function harness({ noGL = false, shaderFailure = false, reduced = false, touch =
   };
   vm.runInContext(appSource, sandbox);
   return {
-    sandbox, get, callbacks, errors, document, docEvents, docRegistrations, winEvents, fluids,
+    sandbox, get, callbacks, errors, document, docEvents, docRegistrations, winEvents, fluids, graphics,
     finishLoading() { loadingDone = true; loaderObserver(); },
     changeMotion(matches) {
       const query = queries.get('(prefers-reduced-motion: reduce)');
@@ -103,6 +160,85 @@ function harness({ noGL = false, shaderFailure = false, reduced = false, touch =
     get splats() { return splats; }
   };
 }
+
+const shaderPairs = [];
+for (const options of [{}, { touch: true }, { webgl1: true }, { webgl1: true, linear: false }, { width: 300, height: 150 }]) {
+  const test = harness({ home: true, gpu: true, ...options });
+  assert.equal(test.get('fluid').dataset.renderer, options.webgl1 ? 'webgl-fluid' : 'webgl2-fluid');
+  assert.equal(test.fluids.length, 0, 'capable contexts must run the GPU solver');
+  assert.equal(test.graphics.contexts.length, 1);
+  test.tick(400);
+  assert.equal(test.graphics.splatDraws, 0, 'ten idle seconds must never execute the splat shader');
+  assert.equal(test.callbacks.size, 1);
+  assert.ok(test.graphics.physics.some(([name, value]) => name === 'curl' && value === 3));
+  assert.ok(test.graphics.physics.some(([name, value]) => name === 'dissipation' && value === 3.5));
+  assert.ok(test.graphics.sizes.every(([w, h]) => w <= 4096 && h <= 4096));
+  if (options.touch) {
+    const finger = { identifier: 3, clientX: 120, clientY: 200 };
+    test.docEvents.touchstart({ isTrusted: true, changedTouches: [finger], timeStamp: 10010 });
+    test.tick();
+    assert.equal(test.graphics.splatDraws, 0, 'touchstart alone must not inject');
+    test.docEvents.touchmove({ isTrusted: false, changedTouches: [{ ...finger, clientX: 150 }], timeStamp: 10020 });
+    test.tick(); assert.equal(test.graphics.splatDraws, 0);
+    test.docEvents.touchmove({ isTrusted: true, changedTouches: [{ ...finger, clientX: 160 }], timeStamp: 10030 });
+    test.docEvents.touchend({ isTrusted: true, changedTouches: [finger], timeStamp: 10040 });
+    assert.equal(test.docRegistrations.touchmove[0].passive, true);
+  } else {
+    const mouse = { pointerId: 2, pointerType: 'mouse', clientX: 200, clientY: 200, timeStamp: 10010 };
+    test.docEvents.pointermove({ ...mouse, isTrusted: true, movementX: 0, movementY: 0 });
+    test.docEvents.pointermove({ ...mouse, isTrusted: false, movementX: 20, movementY: 10 });
+    test.tick(); assert.equal(test.graphics.splatDraws, 0);
+    test.docEvents.pointermove({ ...mouse, isTrusted: true, movementX: 20, movementY: 10 });
+  }
+  test.tick();
+  const emitted = test.graphics.splatDraws;
+  assert.ok(emitted >= 2, 'movement must inject both velocity and dye');
+  const red = test.graphics.colors.at(-1);
+  assert.ok(Math.abs(red[1] / red[0] - 22 / 196) < 1e-6);
+  assert.ok(Math.abs(red[2] / red[0] - 42 / 196) < 1e-6);
+  test.tick(100); assert.equal(test.graphics.splatDraws, emitted);
+
+  const allocated = Object.fromEntries(Object.entries(test.graphics.live).map(([kind, set]) => [kind, set.size]));
+  assert.equal(allocated.Texture, 8); assert.equal(allocated.Framebuffer, 8);
+  for (let i = 0; i < 12; i++) {
+    test.sandbox.innerWidth = 390 + i * 50; test.sandbox.innerHeight = 844 - i * 15;
+    test.winEvents.resize();
+    for (const [kind, set] of Object.entries(test.graphics.live)) assert.equal(set.size, allocated[kind], `${kind} must not accumulate after resize`);
+    assert.equal(test.callbacks.size, 1);
+    assert.equal(test.graphics.splatDraws, emitted, 'resize must not emit');
+  }
+  assert.equal(test.docRegistrations.pointermove.length, 1);
+  assert.equal(test.docRegistrations.touchmove.length, 1);
+  test.winEvents.pagehide({ persisted: true }); assert.equal(test.callbacks.size, 0);
+  test.winEvents.pageshow({ persisted: true }); test.winEvents.pageshow({ persisted: true }); assert.equal(test.callbacks.size, 1);
+  for (const program of test.graphics.programs) shaderPairs.push({
+    vertex: program.shaders.find(shader => shader.source.includes('attribute vec2')).source,
+    fragment: program.shaders.find(shader => !shader.source.includes('attribute vec2')).source
+  });
+  test.winEvents.pagehide({ persisted: false });
+  assert.equal(test.callbacks.size, 0);
+  assert.equal(Object.keys(test.docEvents).length, 0);
+  assert.equal(Object.keys(test.winEvents).length, 0);
+  assert.equal(Object.keys(test.get('fluid').events).length, 0);
+  for (const set of Object.values(test.graphics.live)) assert.equal(set.size, 0, 'teardown must release every GPU resource');
+  assert.equal(test.errors.length, 0);
+}
+const interrupted = harness({ home: true, gpu: true });
+const oldCanvas = interrupted.get('fluid');
+oldCanvas.events.webglcontextlost({ preventDefault() {} });
+assert.notEqual(interrupted.get('fluid'), oldCanvas);
+assert.equal(interrupted.get('fluid').dataset.renderer, 'canvas2d-fluid');
+assert.equal(Object.keys(oldCanvas.events).length, 0);
+assert.equal(interrupted.docRegistrations.pointermove.length, 1);
+assert.equal(interrupted.callbacks.size, 1);
+for (const set of Object.values(interrupted.graphics.live)) assert.equal(set.size, 0);
+interrupted.winEvents.pagehide({ persisted: false });
+assert.equal(interrupted.callbacks.size, 0);
+if (process.env.ZYBERLANE_SHADER_EXPORT) {
+  fs.writeFileSync(process.env.ZYBERLANE_SHADER_EXPORT, JSON.stringify([...new Map(shaderPairs.map(pair => [pair.vertex + pair.fragment, pair])).values()]));
+}
+console.log('PASS: WebGL2/WebGL1 (linear/manual filtering), desktop/mobile/DPR3 and canvas-sized viewport; zero idle/touchstart/synthetic splats, trusted movement emits brand red; bounded allocations through 12 resizes; one loop/listener set; bfcache/context loss and full teardown');
+if (process.argv.includes('--gpu-only')) process.exit(0);
 
 for (const options of [{}, { noGL: true }, { shaderFailure: true }]) {
   const test = harness(options);

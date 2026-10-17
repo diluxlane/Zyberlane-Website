@@ -1,42 +1,60 @@
-# Zyberlane homepage fluid atmosphere
+# Zyberlane homepage fluid A/B experiment
 
-The root homepage (`/`) loads the red fluid atmosphere directly. The `/fluid-preview/`
-lab remains available for diagnostics, pause/clear/quality controls and comparison.
-Both use the same engines under `assets/`.
+This branch (`preview/amin-fluid-cursor`) is **B**, the Amin-inspired experiment.
+**A** remains available on `fix/fluid-mobile-compatibility`, commit
+`786b5ddd0fc899620067bfcbd913fe67fe6c17a1`, in PR #9. No production release or merge
+is authorized by this experiment. Compare the root homepage `/` of each preview.
 
-## Homepage integration
+Each branch ships one active GPU implementation in `assets/fluid.js`. The existing
+`assets/fluid-cpu.js` remains a used compatibility renderer for browsers without
+floating-point WebGL. The `/fluid-preview/` lab uses the same engines and provides
+its existing diagnostic controls. There are no backup implementations or extra
+framework dependencies in this branch.
 
-- `index.html` includes one decorative canvas, `assets/home-fluid.css`, and the
-  ordered deferred scripts `assets/fluid-cpu.js` then `assets/fluid.js`.
-- Existing content, navigation, forms, portfolio, custom cursor, loading sequence
-  and floating buttons are retained. There are no Fluid Lab controls on the homepage.
-- The canvas is a fixed screen-blended layer, below navigation and floating controls,
-  with `pointer-events: none`. It cannot intercept clicks, focus or scrolling.
-- The smoke uses the existing `#c4162a` brand red at restrained opacity over black.
-- Desktop mouse movement is observed on the document. Passive touch listeners follow
-  a finger during native page scrolling without preventing default or capturing page
-  contacts. Touch Pointer Events are ignored on the homepage to prevent duplication.
-- The effect starts after the existing loader finishes, sleeps in hidden tabs,
-  and allocates no graphics on a reduced-motion homepage until that setting changes.
-- Only the homepage imports this atmosphere; About/Services/legal/admin pages do not.
+## Licensed source and scope
 
-## Compatibility
+The B solver is adapted from Inspira UI's MIT-licensed `FluidCursor.vue` at
+`unovue/inspira-ui`, revision `04c57ab62b9713872ebbf68988dff1836ed3d764`, path
+`app/components/inspira/ui/fluid-cursor/FluidCursor.vue`.
 
-Compatible browsers use WebGL2 velocity/dye advection, vorticity confinement and
-pressure projection. If WebGL2, floating-point render targets or shader setup are
-unavailable, the page replaces the GPU canvas and uses a Canvas2D CPU fluid solver.
-The fallback solves real velocity/pressure/dye fields; it does not draw particles.
+Amin's component was studied at `amin-nepali/amin-nepali`, revision
+`626aea086b9c2f5aa7ae294571dd2c78563465aa`. It matches the licensed solver except
+for three TypeScript declarations and a framebuffer error guard. Amin's repository
+has no license notice; code is sourced from the licensed upstream instead. The
+complete upstream MIT copyright/permission notice is retained inside the runtime
+script. No Vue, portfolio integration, branding, rainbow generator, prop watchers,
+capture settings or unrelated source files are imported.
 
-The GPU-only lab was observed failing in the cloud browser on 17 October 2026 with
-`WebGL2 floating-point rendering is unavailable`. The CPU fallback addresses that
-capability failure. If both renderers fail, the homepage hides the decorative layer
-and its original content remains usable.
+## Rendering and integration
 
-CPU quality is bounded more conservatively on the homepage because existing page
-animations run alongside it. Real device frame rate and visual quality still need
-browser verification; numerical tests are not a performance guarantee.
+- Both versions solve velocity, pressure and dye fields with advection and
+  vorticity. B uses the reference's pass order and dissipation formula.
+- B retains curl 3, density dissipation 3.5, velocity dissipation 2, pressure 0.1,
+  20 pressure iterations, splat radius 0.2 and aspect-corrected force 6000.
+- B uses simulation short-side resolution 128 desktop / 96 coarse pointer and dye
+  1024 desktop / 512 coarse pointer, with existing adaptive quality. Explicit lab
+  high quality uses dye 1440. Missing linear filtering selects manual filtering,
+  dye 256 and no shading. Texture dimensions are bounded by hardware limits and
+  aspect ratio 2.5; the existing output-canvas DPR/1920-pixel caps remain.
+- GPU RGBA/RG/R half-float formats are probed for support, with WebGL1 support and
+  the existing CPU fallback. CPU fallback is a compatibility path, not an identical
+  implementation of B's GPU physics; check `canvas.dataset.renderer` when comparing.
+- The palette is fixed Zyberlane `#c4162a`. The GPU overlay clears to transparent.
+  Existing homepage HTML/CSS, opacity, content, navigation, buttons and layout are
+  unchanged. No controls or implementation details are added to the homepage UI.
+- Initial load, touchstart, resize and quality changes do not inject homepage fluid.
+  Only trusted movement injects; touchstart primes a contact without a splat.
+  Passive touch handlers preserve native scrolling and avoid duplicate Pointer
+  Events. The canvas retains `pointer-events: none`.
+- The existing loader and reduced-motion behavior are retained. A single RAF loop
+  sleeps in hidden tabs and the back/forward cache. Final page teardown removes
+  listeners and deletes GPU resources; resize releases replaced targets and probe
+  allocations. GPU context loss switches cleanly to the CPU renderer.
 
-## Checks
+## Checks and deployment
+
+This is a static site with no `package.json` or bundler build command. Vercel serves
+the repository's HTML/assets directly; do not introduce Vue/Vite to run the effect.
 
 ```sh
 node --check assets/fluid.js
@@ -45,38 +63,13 @@ node fluid-preview/tests/compatibility.cjs
 node security/verify.cjs
 ```
 
-The compatibility suite covers missing WebGL/float extensions, shader failure,
-actual CPU fluid evolution and pixel data, replacement-canvas input, pause/clear,
-visibility and reduced motion. Homepage coverage also checks initialization without
-lab controls, passive touch handlers, touch Pointer Event deduplication, cancellation,
-mouse movement, one document binding after fallback, loader sequencing, no initial
-graphics under reduced motion, and non-intercepting homepage markup/styles.
+The existing compatibility suite now includes WebGL call/resource harnesses for
+WebGL2/WebGL1, manual filtering, high DPI, mobile/desktop input, idle startup,
+resize, context loss, back/forward cache and teardown. Its CPU numerical tests
+remain. Harness input is synthetic evidence, not real browser/device testing.
 
-The existing CSP and its inline-script hashes remain unchanged. The new scripts
-are served from the same origin and need no weaker script policy.
-
-## Deployment and remaining verification
-
-This change is prepared in Draft PR #9 on `fix/fluid-mobile-compatibility`.
-It has not been merged by the agent. Preview the root `/` route of its Vercel
-Preview deployment to review the actual homepage, rather than only `/fluid-preview/`.
-
-Vercel previews are protected by authentication. Automatic approval review previously
-rejected a deployment share link without specific authorization; none has been
-created for this change. Local file navigation is also blocked by cloud browser URL
-policy. Full browser visual/pointer/native-touch/performance checks therefore remain
-pending an authorized preview session or temporary share link. No protection settings
-have been disabled. A share link grants access to the full preview deployment.
-
-Netlify's `/fluid-preview/` returned 404 in the earlier inspection; a GitHub merge
-and successful Vercel deployment do not establish that Netlify production is updated.
-No Netlify production deployment is performed by this PR.
-
-Before merging, verify the homepage renders curling red smoke under pointer/touch,
-ordinary links/forms and mobile vertical/horizontal scrolling remain usable, dialogs
-and menu appear above the atmosphere, reduced-motion disables it, and browser console
-has no errors introduced by the atmosphere. Check both GPU and fallback paths where
-available. The lab diagnostics can help identify the renderer and frame rate.
-
-Algorithm reference: Mark Harris,
-[GPU Gems chapter 38](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu).
+Vercel previews require authentication. Real Chrome visuals, native touch, scrolling,
+frame rate and application console checks remain pending until the fixed deployment
+can be opened in an authorized browser session. Native shader compilation and mock
+resource counts are not browser or performance guarantees. No deployment protection,
+CSP/hosting configuration, main branch or Netlify production deployment is changed.
