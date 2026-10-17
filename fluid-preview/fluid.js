@@ -5,7 +5,7 @@
 (() => {
   'use strict';
   const byId = id => document.getElementById(id);
-  const canvas = byId('fluid');
+  let canvas = byId('fluid');
   const status = byId('status');
   const engine = byId('engine');
   const metrics = byId('metrics');
@@ -26,6 +26,7 @@
   let raf = 0, lastTime = 0, elapsed = 0, lastAmbient = 0, lastMetrics = 0;
   let sampleFrames = 0, sampleTime = 0, adaptiveLow = false;
   let gl, programs, velocity, dye, pressure, divergence, curl;
+  let cpu = null;
   let targets = [];
 
   function reportError(message) {
@@ -194,9 +195,17 @@
   }
 
   function allocate() {
+    const low = quality.value === 'low' || (quality.value === 'auto' && (coarse.matches || adaptiveLow));
+    if (cpu) {
+      const resolution = quality.value === 'high' ? 152 : low ? 96 : 128;
+      const dimensions = size(resolution);
+      cpu.resize(...dimensions, low ? 12 : 16);
+      engine.textContent = `Renderer: Canvas2D fluid · grid ${dimensions.join('×')}${low ? ' · low' : ''}`;
+      canvas.dataset.renderer = 'canvas2d-fluid';
+      return;
+    }
     for (const item of targets) { gl.deleteTexture(item.texture); gl.deleteFramebuffer(item.fbo); }
     targets = [];
-    const low = quality.value === 'low' || (quality.value === 'auto' && (coarse.matches || adaptiveLow));
     const simSize = size(low ? 96 : 144);
     const dyeSize = size(low ? 384 : 640);
     velocity = doubleTarget(...simSize, gl.LINEAR);
@@ -227,12 +236,12 @@
   }
 
   function resize() {
-    if (!gl || lost || failed) return;
+    if ((!gl && !cpu) || lost || failed) return;
     const ratio = Math.min(devicePixelRatio || 1, coarse.matches ? 1.25 : 1.5);
     const scale = Math.min(ratio, 1920 / Math.max(innerWidth, innerHeight));
     const width = Math.max(1, Math.round(innerWidth * scale));
     const height = Math.max(1, Math.round(innerHeight * scale));
-    if (canvas.width === width && canvas.height === height && velocity) return;
+    if (canvas.width === width && canvas.height === height && (velocity || cpu?.width)) return;
     canvas.width = width; canvas.height = height;
     pointers.clear(); pending.length = 0; allocate();
     if (!paused) seed();
@@ -240,6 +249,7 @@
   }
 
   function splat(x, y, dx, dy, strength = 0.65, radius = 0.00065) {
+    if (cpu) { cpu.splat(x, y, dx, dy, strength, radius); splatCount++; return; }
     const common = { uPoint: [Math.max(0, Math.min(1, x)), Math.max(0, Math.min(1, y))], uAspect: canvas.width / canvas.height, uRadius: radius };
     draw(programs.splat, velocity.write, { uTarget: velocity.read }, {
       ...common, uColor: [Math.max(-250, Math.min(250, dx)), Math.max(-250, Math.min(250, dy)), 0]
@@ -267,6 +277,7 @@
           -Math.sin(a + offset) * 16, Math.cos(a * 1.3 + offset) * 20, 0.075, 0.0006);
       }
     }
+    if (cpu) { cpu.step(dt); return; }
     const texel = velocity.read.texel;
     draw(programs.advect, velocity.write, { uVelocity: velocity.read, uSource: velocity.read }, { uVelocityTexel: texel, uDt: dt, uDecay: 0.32 });
     velocity.swap();
@@ -286,12 +297,15 @@
     dye.swap();
   }
 
-  function render() { draw(programs.display, null, { uDye: dye.read }, { uTexel: dye.read.texel }); }
+  function render() {
+    if (cpu) cpu.render();
+    else draw(programs.display, null, { uDye: dye.read }, { uTexel: dye.read.texel });
+  }
 
   function updateStatus() {
     pauseButton.textContent = paused ? 'Play' : 'Pause';
     pauseButton.setAttribute('aria-pressed', String(paused));
-    status.textContent = failed ? 'Fluid unavailable · WebGL2 required' : lost ? 'Graphics interrupted · waiting to restore'
+    status.textContent = failed ? 'Fluid unavailable · try another browser' : lost ? 'Graphics interrupted · waiting to restore'
       : paused ? (motion.matches ? 'Reduced motion · press Play to explore' : 'Paused · press Play to continue') : 'Live fluid · move or drag to stir';
     canvas.dataset.state = failed ? 'unavailable' : lost ? 'context-lost' : paused ? 'paused' : 'running';
   }
@@ -321,7 +335,11 @@
         }
         sampleTime = 0; sampleFrames = 0; lastMetrics = now;
       }
-    } catch (error) { fail(error); return; }
+    } catch (error) {
+      if (!cpu) { try { activateFallback(error); } catch (fallbackError) { fail(fallbackError); } }
+      else fail(error);
+      return;
+    }
     start();
   }
 
@@ -340,26 +358,34 @@
       pending.push([previous.x + dx * t, previous.y + dy * t, dx * 4200, dy * 4200, 0.4, touch ? 0.001 : 0.00065]);
     }
   }
-  canvas.addEventListener('pointerdown', event => {
-    if (paused || lost || failed || (event.pointerType === 'mouse' && event.button !== 0)) return;
-    const current = point(event);
-    pointers.set(event.pointerId, current); canvas.setPointerCapture(event.pointerId);
-    lastInput = event.pointerType || 'mouse';
-    if (pending.length < 24) pending.push([current.x, current.y, 0, 30, 0.7, 0.001]);
-  });
-  canvas.addEventListener('pointermove', event => {
-    if (paused || lost || failed) return;
-    const touch = event.pointerType === 'touch';
-    if (event.pointerType !== 'mouse' && !pointers.has(event.pointerId)) return;
-    const current = point(event), previous = pointers.get(event.pointerId);
-    lastInput = event.pointerType || 'mouse'; moveCount++;
-    if (previous && current.time - previous.time < 180) queueStroke(previous, current, touch);
-    else if (pending.length < 24) pending.push([current.x, current.y, 0, 12, 0.4, touch ? 0.001 : 0.00065]);
-    pointers.set(event.pointerId, current);
-  });
-  function release(event) { pointers.delete(event.pointerId); }
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, release);
-  canvas.addEventListener('pointerleave', event => { if (!canvas.hasPointerCapture(event.pointerId)) release(event); });
+  function bindCanvasEvents() {
+    canvas.addEventListener('pointerdown', event => {
+      if (paused || lost || failed || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      const current = point(event);
+      pointers.set(event.pointerId, current);
+      try { canvas.setPointerCapture(event.pointerId); } catch { /* Contact may have ended before capture. */ }
+      lastInput = event.pointerType || 'mouse';
+      if (pending.length < 24) pending.push([current.x, current.y, 0, 30, 0.7, 0.001]);
+    });
+    canvas.addEventListener('pointermove', event => {
+      if (paused || lost || failed) return;
+      const touch = event.pointerType === 'touch';
+      if (event.pointerType !== 'mouse' && !pointers.has(event.pointerId)) return;
+      const current = point(event), previous = pointers.get(event.pointerId);
+      lastInput = event.pointerType || 'mouse'; moveCount++;
+      if (previous && current.time - previous.time < 180) queueStroke(previous, current, touch);
+      else if (pending.length < 24) pending.push([current.x, current.y, 0, 12, 0.4, touch ? 0.001 : 0.00065]);
+      pointers.set(event.pointerId, current);
+    });
+    function release(event) { pointers.delete(event.pointerId); }
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, release);
+    canvas.addEventListener('pointerleave', event => { if (!canvas.hasPointerCapture(event.pointerId)) release(event); });
+    canvas.addEventListener('webglcontextlost', event => {
+      event.preventDefault();
+      if (cpu || failed) return;
+      try { activateFallback(new Error('GPU context interrupted')); } catch (error) { fail(error); }
+    });
+  }
   addEventListener('blur', () => { pointers.clear(); pending.length = 0; });
 
   pauseButton.addEventListener('click', () => {
@@ -376,6 +402,7 @@
   clearButton.addEventListener('click', () => {
     if (failed || lost) return;
     pointers.clear(); pending.length = 0; ambient.checked = false;
+    if (cpu) { cpu.clear(); render(); return; }
     for (const item of targets) { gl.bindFramebuffer(gl.FRAMEBUFFER, item.fbo); gl.clear(gl.COLOR_BUFFER_BIT); }
     render();
   });
@@ -391,15 +418,23 @@
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else start(); });
   addEventListener('resize', () => { try { resize(); } catch (error) { fail(error); } }, { passive: true });
-  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); lost = true; stop(); updateStatus(); });
-  canvas.addEventListener('webglcontextrestored', () => {
-    lost = false; targets = []; velocity = null;
-    try { initialize(); updateStatus(); start(); } catch (error) { fail(error); }
-  });
+
+  function activateFallback(reason) {
+    stop();
+    // A canvas that acquired WebGL cannot acquire 2D. Replace the element and
+    // rebind its input handlers; otherwise the fallback would fail on this path.
+    const replacement = canvas.cloneNode(false);
+    canvas.replaceWith(replacement);
+    canvas = replacement;
+    cpu = new window.ZyberlaneCPUFluid(canvas);
+    gl = null; velocity = null; targets = []; lost = false; failed = false;
+    bindCanvasEvents(); resize(); updateStatus(); start();
+    console.info('[Zyberlane fluid] Canvas2D fluid active:', reason.message);
+  }
 
   function fail(error) {
     failed = true; stop(); reportError(error.message);
-    engine.textContent = 'Renderer unavailable · WebGL2 + floating-point textures required';
+    engine.textContent = 'Renderer unavailable · this browser could not initialize graphics';
     for (const control of [pauseButton, burstButton, clearButton, quality, ambient]) control.disabled = true;
     updateStatus(); console.error('[Zyberlane fluid]', error);
   }
@@ -414,5 +449,7 @@
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     resize(); updateStatus();
   }
-  try { initialize(); start(); } catch (error) { fail(error); }
+  bindCanvasEvents();
+  try { initialize(); start(); }
+  catch (error) { try { activateFallback(error); } catch (fallbackError) { fail(fallbackError); } }
 })();

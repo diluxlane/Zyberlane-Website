@@ -1,78 +1,86 @@
-# Zyberlane Fluid Lab — isolated experiment
+# Zyberlane Fluid Lab — mobile compatibility repair
 
-Draft PR #8 · branch `preview/zyberlane-fluid-smoke`. Do not merge into main.
+The experiment remains isolated under `/fluid-preview/`. The homepage, shared
+assets, security policy, database and hosting configuration are not changed.
+PR #8 was merged by the repository owner; subsequent repairs belong on a separate
+branch and must not be merged without review.
 
-Only files under `fluid-preview/` belong to this experiment. No production HTML,
-shared assets, CSP, hosting configuration, database, domain, or main branch is changed.
+## Confirmed live failure
 
-## Why the first preview was unusable
+On 17 October 2026 the cloud browser opened
+`https://zyberlane.vercel.app/fluid-preview/` and rendered the Fluid Lab shell,
+but displayed `Fluid unavailable · WebGL2 required` with disabled controls.
+The actual browser console reported:
 
-Inspected on 17 October 2026:
+```text
+[Zyberlane fluid] Error: WebGL2 floating-point rendering is unavailable.
+    at initialize (.../fluid-preview/fluid.js:408:66)
+```
 
-1. Vercel's Git integration successfully deployed the original commit `6156778`.
-   Its build logs show a static build completed in 62 ms and deployment reached
-   `READY`. This repository has no package.json or Vite build pipeline.
-2. The project enables Vercel Authentication for `all_except_custom_domains`.
-   The branch preview redirected the cloud browser to Vercel login.
-3. The preview's inline script was absent from the CSP's allowed script hashes.
-   The deployed response enforced that CSP, so opening the page after authentication
-   would still block its script. Missing hash:
-   `sha256-OaIeGg3Lfnbva0DMZgTHgmdw+JJ/0ihZKv1gLJNPr2g=`.
-4. The old renderer was a Canvas2D collection of fading radial-gradient particles,
-   not a velocity/pressure fluid simulation. It also registered both Pointer Events
-   and touch handlers, risking duplicate input on touch browsers.
-5. `zyberlane.netlify.app` responds from Netlify. This PR has no Netlify deploy
-   status, netlify.toml, or deployment workflow in its repository. Netlify dashboard
-   settings could not be inspected; no claim is made that its Deploy Previews are
-   enabled or disabled. Netlify production was not deployed or modified.
+This reproduces a graphics compatibility failure. It does not establish the exact
+browser/URL used by the person who reported a mobile failure.
+`https://zyberlane.netlify.app/fluid-preview/` separately returned a Netlify 404;
+merging GitHub/Vercel changes does not establish that Netlify has this route.
 
-## Changes
+## Repair
 
-- Same-origin external JS and CSS, compatible with the existing CSP without
-  weakening the policy. Absolute asset paths survive slash normalization.
-- WebGL2 grid-based fluid: velocity self-advection, curl/vorticity confinement,
-  divergence, 20 Jacobi pressure iterations, pressure-gradient projection,
-  dye advection/dissipation, and a red-only shaded display pass.
-- One Pointer Events input path: mouse hover, touch/pen contact, pointer capture,
-  cancellation cleanup, continuous stroke interpolation and a bounded input queue.
-- Responsive controls for stir, pause, clear, ambient motion, quality, and
-  inspectable diagnostics. Clear also stops ambient injection.
-- Bounded DPR/display/texture sizes; coarse-pointer quality default; one adaptive
-  downgrade; hidden-tab suspension; reduced-motion starts paused; context-loss recovery.
-- This experimental renderer requires WebGL2 plus floating-point color buffers.
-  Unsupported browsers display a visible fallback and stop instead of a silent canvas.
+- Preserve the WebGL2 velocity/pressure/dye solver on compatible browsers.
+- Load a dependency-free Canvas2D CPU fluid solver from the same origin. It solves
+  a velocity/pressure grid, vorticity, pressure projection and dye advection; it
+  does not draw particle sprites.
+- Recover automatically if WebGL2 is missing, float render targets are missing,
+  shader setup fails, or the GPU context is interrupted.
+- Replace a canvas that acquired WebGL before acquiring a Canvas2D context, then
+  rebind pointer handlers. A single canvas cannot switch context types.
+- Retain working mouse/touch controls, pointer cancellation, clear, pause/resume,
+  coarse-pointer quality, reduced-motion and hidden-tab suspension in the fallback.
+- Handle an ended pointer contact without crashing on capture.
+- Keep the black/red direction, external scripts and existing CSP.
 
-Algorithm reference: Mark Harris, [GPU Gems chapter 38](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu).
-The implementation is original and has no third-party script dependency.
+The CPU path trades some fine detail for compatibility and limits its grid size
+and pressure iterations. Browsers lacking both WebGL and Canvas2D show an explicit
+failure. Actual device performance still needs measurement.
 
-## Verification status
+## Validation
 
-| Check | Result |
-| --- | --- |
-| JS syntax / diff whitespace | Passed |
-| Existing `node security/verify.cjs` | Passed; original CSP/hosting parity preserved |
-| All 9 actual GLSL programs compile/link | Passed in native Mesa GLES3; not a browser test |
-| Synthetic input/lifecycle tests with GPU stub | Passed: timestamp-based FPS, one RAF loop, mouse input, touch contact/cancel, coarse resolution, pause/resume, visibility, reduced-motion and unavailable-WebGL fallback |
-| Vercel Git deployment | First replacement commit `f0a27c0` reached READY as a Preview, not Production |
-| Cloud browser reaches deployed simulation | Blocked by authentication; sign-in did not complete |
-| Browser console / actual pointer interaction | Not verified |
-| Native mobile/touch and responsive visual QA | Not verified |
-| Fluid visual quality / frame rate on real browser | Not verified; do not infer success from source or shader tests |
+Run:
 
-Access: automatic approval review rejected a temporary deployment share link, and
-later rejected the authenticated fetch helper because that helper also creates or
-reuses a protection bypass. No project protection was disabled. Secure browser login
-reached a Google account identifier error. Browser verification remains pending
-successful sign-in or explicit authorization for a temporary share link scoped to
-the PR deployment. A deployment share link grants access to the full preview,
-not only this route.
+```sh
+node --check fluid-preview/fluid.js
+node --check fluid-preview/cpu-fluid.js
+node fluid-preview/tests/compatibility.cjs
+node security/verify.cjs
+```
 
-## Remaining browser checks
+The regression suite runs the actual CPU solver with Canvas stubs, and checks:
 
-Open the protected branch preview's `/fluid-preview/` route after authorized access.
-Observe the actual canvas and browser console. Confirm motion leaves continuous,
-curling, fading red fluid; compare clear → hover/drag with ambient disabled.
-Test native touch drag, multiple contacts, pointer cancellation, mobile portrait and
-landscape, controls, quality changes, and reduced-motion. Check liveness/FPS in
-Settings and test pause/resume and switching tabs. Iterate on observed rendering or
-performance failures before claiming that this preview works.
+- recovery from missing WebGL2, missing float extension and shader failure;
+- replacement-canvas input wiring and enabled controls;
+- touch contact/cancel and capture failure handling;
+- one animation loop, pause/resume, hidden tabs, clear and reduced motion;
+- finite evolving velocity/pressure/dye fields after 120 simulation steps;
+- non-black red image pixels and a full reset to zero.
+
+All of these pass. The nine unchanged GLSL programs also compile/link under native
+Mesa GLES3. These results do not constitute a real browser rendering/touch test.
+
+The original failure is verified in the cloud browser. The repaired branch still
+requires HTTPS preview browser verification. Local `file:` navigation is blocked
+by cloud browser URL policy. Vercel branch previews remain protected; no access
+protection has been disabled or bypass granted. A successful signed-in session or
+explicit authorization for a time-limited deployment share link is needed to test
+that deployment. Such a link grants access to the full PR preview, not only this
+route. The production alias remains on the owner's merged commit until a repair
+is reviewed and merged by the owner.
+
+## Browser checks before merging
+
+Open the repaired HTTPS `/fluid-preview/` route. Check Settings shows either
+`WebGL2 fluid` or `Canvas2D fluid`, advancing frames and `Runtime errors: 0`.
+With ambient disabled, clear the canvas and verify mouse/touch input creates
+continuous curling red smoke. Test mobile portrait/landscape, touch cancellation,
+controls, quality, reduced motion, pause/resume and tab switching. Inspect browser
+console and actual frame rate; adjust the effect if visible failures remain.
+
+Algorithm reference: Mark Harris,
+[GPU Gems chapter 38](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu).
