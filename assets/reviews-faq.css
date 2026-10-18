@@ -1,0 +1,68 @@
+/* Homepage additions use the existing type, color, spacing and motion tokens. */
+.stories-track{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px;}
+.story-panel{min-width:0;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:32px;}
+.story-rating{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
+.story-stars{color:var(--red-glow);font-size:22px;letter-spacing:.12em;line-height:1;}
+.story-rating-label,.story-source{font-family:'Space Mono',monospace;font-size:11px;color:#b7b3b0;line-height:1.6;}
+.review-copy p{font-size:clamp(16px,1.35vw,19px);line-height:1.75;overflow-wrap:anywhere;}
+.review-more{margin-top:16px;}
+.review-more summary{display:list-item;width:fit-content;max-width:100%;min-height:44px;padding:12px 4px;cursor:pointer;color:var(--white);font-family:'Space Mono',monospace;font-size:11px;}
+.review-more summary::marker{color:var(--red-glow);}
+.review-more summary:focus-visible{outline:2px solid var(--red-glow);outline-offset:3px;}
+.review-more .review-less,.review-more[open] .review-full{display:none;}
+.review-more[open] .review-less{display:inline;}
+.review-more p{margin-top:14px;}
+.story-identity{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;margin-top:24px;padding-top:22px;border-top:1px solid var(--line);}
+.story-client{font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;}
+.story-business{margin-top:4px;color:#b7b3b0;font-size:13px;line-height:1.6;}
+.story-source{display:inline-flex;align-items:center;gap:8px;min-height:44px;}
+.story-source:hover{color:var(--white);}
+.google-mark{width:22px;height:22px;flex-shrink:0;}
+.google-review-panel{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;}
+.google-review-panel>.google-mark{width:36px;height:36px;margin-bottom:28px;}
+.google-review-panel h3{font-family:'Poppins',sans-serif;font-size:clamp(24px,2.6vw,34px);font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:18px 0 14px;}
+.google-review-panel p{max-width:34ch;font-size:14px;color:#b7b3b0;line-height:1.75;margin-bottom:24px;}
+.google-review-panel .cta-btn{white-space:normal;line-height:1.6;min-height:44px;}
+.stories-controls{display:none;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;}
+.stories-controls .eyebrow{letter-spacing:.08em;}
+#testimonials.scroll-stories{height:var(--stories-height);padding-top:0;padding-bottom:0;}
+.scroll-stories .stories-sticky{position:sticky;top:90px;padding:28px 0;}
+.scroll-stories .stories-viewport{overflow:hidden;}
+.scroll-stories .stories-track{display:flex;will-change:transform;}
+.scroll-stories .story-panel{flex:0 0 74%;}
+.scroll-stories .google-review-panel{flex-basis:48%;}
+.scroll-stories .stories-controls{display:flex;}
+.faq-list{max-width:960px;margin-left:auto;}
+.faq-item{border-bottom:1px solid var(--line);}
+.faq-item h3{font-family:'Poppins',sans-serif;font-weight:500;}
+.faq-trigger{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;min-height:64px;padding:22px 4px;border:0;background:none;color:var(--white);font:inherit;font-size:clamp(15px,1.5vw,18px);line-height:1.5;text-align:left;cursor:pointer;}
+.faq-trigger:disabled{cursor:default;opacity:1;}
+.faq-trigger:hover:not(:disabled){color:var(--red-glow);}
+.faq-icon{display:none;position:relative;flex:0 0 18px;width:18px;height:18px;}
+.faq-icon::before,.faq-icon::after{content:'';position:absolute;top:8px;left:1px;width:16px;height:2px;background:currentColor;}
+.faq-icon::after{transform:rotate(90deg);transition:transform .32s var(--ease);}
+.faq-ready .faq-icon{display:block;}
+.faq-trigger[aria-expanded="true"] .faq-icon::after{transform:rotate(0deg);}
+.faq-answer-inner{min-height:0;overflow:hidden;}
+.faq-answer p{max-width:76ch;padding:0 36px 24px 4px;color:#b7b3b0;font-size:15px;line-height:1.8;}
+.faq-answer a{text-decoration:underline;text-underline-offset:4px;}
+.faq-answer a:hover{color:var(--white);}
+.faq-ready .faq-answer{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .32s var(--ease),visibility .32s;}
+.faq-ready .faq-answer.is-open{grid-template-rows:1fr;visibility:visible;}
+@media(max-width:860px){
+  .stories-track{grid-template-columns:minmax(0,1fr);gap:16px;}
+  .story-panel{padding:24px;}
+  .review-copy p{font-size:16px;}
+  .google-review-panel>.google-mark{margin-bottom:20px;}
+  .google-review-panel h3{font-size:26px;}
+  .faq-trigger{gap:16px;padding:20px 4px;}
+  .faq-answer p{padding-right:4px;}
+}
+@media(max-width:380px){
+  .story-panel{padding:20px;}
+  .story-identity{gap:12px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .stories-track{grid-template-columns:minmax(0,1fr);will-change:auto;}
+  .faq-ready .faq-answer,.faq-icon::after{transition:none;}
+}
