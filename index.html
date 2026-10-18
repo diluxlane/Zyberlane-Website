@@ -203,7 +203,6 @@
     filter:drop-shadow(0 0 16px rgba(255,45,66,.4)) drop-shadow(0 0 34px rgba(196,22,42,.25));
     opacity:0; transform:scale(.4);
   }
-  @keyframes blink{50%{opacity:0;}}
 
   .stats{
     position:relative; z-index:2;
@@ -234,26 +233,7 @@
     font-family:'Poppins'; font-weight:800; font-size:clamp(24px,3vw,34px); text-transform:uppercase; letter-spacing:-.01em;
   }
 
-  /* ---------- PROJECTS (empty state) ---------- */
-  .projects-empty{
-    border:1px dashed var(--line);
-    border-radius:4px;
-    padding:70px 40px;
-    text-align:center;
-    background:linear-gradient(180deg, rgba(147,6,21,.04), transparent);
-  }
-  .projects-empty .mark{
-    font-family:'Anton'; font-size:60px; color:var(--red); opacity:.5; margin-bottom:18px;
-  }
-  .projects-empty h3{
-    font-family:'Poppins'; font-weight:700; font-size:22px; margin-bottom:10px; text-transform:uppercase;
-  }
-  .projects-empty p{color:var(--gray); font-size:14px; max-width:440px; margin:0 auto 26px; line-height:1.7;}
-  .badge{
-    display:inline-block; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--red-glow); border:1px solid rgba(196,22,42,.4);
-    padding:7px 14px; border-radius:20px;
-  }
+  /* ---------- PROJECTS ---------- */
   .projects-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr)); gap:26px;}
   .project-card{
     border:1px solid var(--line); border-radius:6px; overflow:hidden;
@@ -475,7 +455,6 @@
     #work, #contact{padding-bottom:28px;}
     #skills, #booking{padding-top:32px;}
     .section-head{margin-bottom:28px; padding-bottom:14px;}
-    .projects-empty{padding:44px 24px;}
     .skills-wrap{gap:16px;}
     .process-list{max-width:100%;}
     .p-step{padding:18px 0;}
@@ -1280,9 +1259,7 @@
 
     if (map.contact_email){
       var mailto = 'mailto:' + map.contact_email;
-      var ctaBtn = document.getElementById('ctaEmailBtn');
       var emailLink = document.getElementById('contactEmailLink');
-      if (ctaBtn) ctaBtn.href = mailto;
       if (emailLink) emailLink.href = mailto;
     }
     if (map.whatsapp_number_link){
@@ -1372,64 +1349,6 @@
 
   // ---------- testimonials are curated in static homepage markup ----------
 
-  // ---------- portfolio projects ----------
-  function buildProjectCardHtml(p, i){
-    var thumbHtml = p.cover_image_url ? '<div class="thumb-frame"><img alt=""></div>' : '';
-    return thumbHtml +
-      '<div class="body">' +
-        '<div class="num">' + String(i+1).padStart(2,'0') + '</div>' +
-        '<h3></h3>' +
-        (p.category ? '<span class="category"></span>' : '') +
-        (p.description ? '<p class="desc"></p>' : '') +
-        (p.live_url ? '<a class="visit-btn" target="_blank" rel="noopener">Visit Site &rarr;</a>' : '') +
-      '</div>';
-  }
-  function fillProjectCard(card, p){
-    var h3 = card.querySelector('h3'); if (h3) h3.textContent = p.name;
-    var cat = card.querySelector('.category'); if (cat) cat.textContent = p.category || '';
-    var desc = card.querySelector('.desc'); if (desc) desc.textContent = p.description || '';
-    var visit = card.querySelector('.visit-btn'); if (visit && p.live_url){ var safeLive = safeUrl(p.live_url); if (safeLive) visit.href = safeLive; }
-    // only touch the image if the CMS actually provides one — never blank out
-    // an existing screenshot just because this field hasn't been filled in yet
-    if (p.cover_image_url){
-      var img = card.querySelector('img');
-      var safeCover = safeUrl(p.cover_image_url); if (img && safeCover) { img.src = safeCover; img.alt = p.name; }
-    }
-  }
-  function renderProjects(rows){
-    if (!rows || !rows.length) return; // keep the static fallback card entirely
-    var grid = document.getElementById('projectsGrid');
-    if (!grid) return;
-    var existingBySlug = {};
-    grid.querySelectorAll('[data-slug]').forEach(function(el){ existingBySlug[el.getAttribute('data-slug')] = el; });
-
-    var seenSlugs = {};
-    rows.forEach(function(p, i){
-      seenSlugs[p.slug] = true;
-      var existing = p.slug && existingBySlug[p.slug];
-      var card;
-      if (existing){
-        card = existing;
-        fillProjectCard(card, p); // update text in place, preserve existing image
-      } else {
-        card = document.createElement('div');
-        card.className = 'project-card reveal in';
-        if (p.slug) card.setAttribute('data-slug', p.slug);
-        card.innerHTML = buildProjectCardHtml(p, i);
-        fillProjectCard(card, p);
-      }
-      var numEl = card.querySelector('.num');
-      if (numEl) numEl.textContent = String(i+1).padStart(2,'0');
-      // appendChild on an already-attached node moves it — this keeps the
-      // on-screen order in sync with sort_order every time content loads
-      grid.appendChild(card);
-    });
-    // remove fallback cards for projects that are no longer public (rare, but keeps things honest)
-    Object.keys(existingBySlug).forEach(function(slug){
-      if (!seenSlugs[slug]) existingBySlug[slug].remove();
-    });
-  }
-
   function safeFetch(promise){
     return promise.then(function(res){ return res && !res.error ? res.data : null; })
                    .catch(function(){ return null; });
@@ -1438,13 +1357,11 @@
   Promise.allSettled([
     safeFetch(sb.from('site_settings').select('key, value')),
     safeFetch(sb.from('services').select('*').eq('is_active', true).order('sort_order')),
-    safeFetch(sb.from('packages').select('*').eq('is_active', true).order('sort_order')),
-    safeFetch(sb.from('projects').select('id, name, slug, category, description, live_url, cover_image_url, sort_order, created_at').eq('is_public', true).order('sort_order').order('created_at'))
+    safeFetch(sb.from('packages').select('*').eq('is_active', true).order('sort_order'))
   ]).then(function(results){
     var settings = results[0].value;
     var services = results[1].value;
     var packages = results[2].value;
-    var projects = results[3].value;
 
     if (settings) applySiteSettings(settings.map(function(r){
       // jsonb text values arrive already unwrapped as JS strings/booleans by supabase-js
