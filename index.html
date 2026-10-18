@@ -63,6 +63,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site-pages.css">
+<link rel="stylesheet" href="/assets/reviews-faq.css">
+<script src="/assets/reviews-faq.js" defer></script>
 <style>
   :root{
     --black:#050505;
@@ -322,13 +324,6 @@
   .package-card ul{list-style:none; margin:16px 0 0; padding:0; display:flex; flex-direction:column; gap:9px;}
   .package-card ul li{color:var(--gray); font-size:13px; padding-left:18px; position:relative;}
   .package-card ul li::before{content:'-'; position:absolute; left:0; color:var(--red-glow);}
-
-  /* ---------- TESTIMONIALS ---------- */
-  .testimonial-card p{color:var(--white); font-size:14.5px; line-height:1.75; font-style:italic;}
-  .testimonial-card .who{margin-top:18px; display:flex; align-items:center; gap:10px;}
-  .testimonial-card .who img{width:34px; height:34px; border-radius:50%; object-fit:cover; border:1px solid var(--line);}
-  .testimonial-card .who .name{font-family:'Poppins'; font-weight:600; font-size:13px; color:var(--white);}
-  .testimonial-card .who .role{font-family:'Space Mono',monospace; font-size:10.5px; color:var(--gray);}
 
   /* ---------- BOOKING FORM ---------- */
   .booking-form{max-width:760px;}
@@ -788,6 +783,60 @@
   <div class="portfolio-gallery" id="portfolioGallery"></div>
 </dialog>
 
+<!-- ================= CLIENT STORIES ================= -->
+<section id="testimonials" aria-labelledby="storiesTitle">
+  <div class="stories-sticky">
+    <div class="section-head">
+      <h2 id="storiesTitle">Client Stories</h2>
+      <span class="eyebrow">Words <span class="dot" aria-hidden="true">●</span> from the work</span>
+    </div>
+    <div class="stories-viewport" role="group" aria-label="Client testimonial and Google reviews">
+      <!-- Add future genuine reviews as story-panel articles before the Google panel. -->
+      <div class="stories-track">
+        <article class="story-panel" aria-label="Divine Tattoo client review">
+          <div class="story-rating">
+            <span class="story-stars" aria-hidden="true">★★★★★</span>
+            <span class="story-rating-label">5 out of 5 stars</span>
+          </div>
+          <blockquote class="review-copy" cite="https://maps.app.goo.gl/43SbLYGa6dmvyjkN6">
+            <p>I had a great experience working with Zyberlane. He created an absolutely amazing website for my business, and I’m genuinely impressed with the final result. The design is modern, professional, clean, and perfectly matches my brand.</p>
+            <details class="review-more">
+              <summary><span class="review-full">Read full review</span><span class="review-less">Show less</span></summary>
+              <p>What I really appreciated was his excellent communication, patience, attention to detail, and willingness to understand exactly what I needed. He didn’t just make a website — he turned my idea into something much better than I expected.</p>
+              <p>If you’re looking for someone who is talented, reliable, creative, and takes their work seriously, I highly recommend Zyberlane. Excellent work and excellent service! 🔥❤️</p>
+              <p>Definitely 5 Stars! ⭐⭐⭐⭐⭐</p>
+            </details>
+          </blockquote>
+          <div class="story-identity">
+            <div>
+              <div class="story-client">Asanka Mahesh</div>
+              <div class="story-business">Divine Tattoo</div>
+            </div>
+            <a class="story-source" href="https://maps.app.goo.gl/43SbLYGa6dmvyjkN6" target="_blank" rel="noopener noreferrer" aria-label="Google Review — opens in a new tab">
+              <img class="google-mark" src="/assets/google-g.png" width="22" height="22" alt="" loading="lazy" decoding="async">
+              Google Review <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </article>
+        <aside class="story-panel google-review-panel" aria-labelledby="googleReviewsTitle">
+          <img class="google-mark" src="/assets/google-g.png" width="36" height="36" alt="Google" loading="lazy" decoding="async">
+          <span class="story-stars" aria-hidden="true">★★★★★</span>
+          <h3 id="googleReviewsTitle">5 Stars on Google</h3>
+          <p>Feedback from Asanka Mahesh at Divine Tattoo. Read his review and explore Zyberlane on Google.</p>
+          <a class="cta-btn" href="https://maps.app.goo.gl/43SbLYGa6dmvyjkN6" target="_blank" rel="noopener noreferrer" aria-label="Read our Google reviews — opens in a new tab">Read our Google reviews <span aria-hidden="true">↗</span></a>
+        </aside>
+      </div>
+    </div>
+    <div class="stories-controls">
+      <span class="eyebrow">Scroll to explore <span class="dot" aria-hidden="true">●</span> Client story &amp; Google</span>
+      <div class="work-arrows">
+        <button type="button" class="work-arrow" id="storiesPrevious" aria-label="Show the client testimonial">←</button>
+        <button type="button" class="work-arrow" id="storiesNext" aria-label="Show Google reviews">→</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================= SKILLS ================= -->
 <section id="skills">
   <div class="section-head reveal">
@@ -848,21 +897,82 @@
   <div class="skills-wrap" id="packagesGrid"></div>
 </section>
 
-<!-- ================= TESTIMONIALS (CMS-controlled, hidden until populated) ================= -->
-<section id="testimonials" style="display:none;">
-  <div class="section-head reveal">
-    <h2>What Clients Say</h2>
-    <span class="eyebrow">Words <span class="dot">●</span> from the work</span>
-  </div>
-  <div class="skills-wrap" id="testimonialsGrid"></div>
-</section>
-
 <!-- ================= QUOTE ================= -->
 <section class="quote-section">
   <div class="quote-inner reveal">
     <div class="quote-mark">"</div>
     <p data-cms="quote_text">Good design is not just how it looks, but how it works.</p>
     <div class="quote-sig"><span aria-hidden="true">— </span><b data-cms="quote_signature">Zyberlane</b></div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq" aria-labelledby="faqTitle">
+  <div class="section-head reveal">
+    <h2 id="faqTitle">Frequently Asked Questions</h2>
+    <span class="eyebrow">Before <span class="dot" aria-hidden="true">●</span> we build</span>
+  </div>
+  <div class="faq-list">
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-services" aria-expanded="true" aria-controls="faq-answer-services" disabled>What services does Zyberlane provide?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-services" aria-labelledby="faq-services">
+        <div class="faq-answer-inner"><p>We build business websites, landing pages, portfolios, web applications and custom digital tools, alongside AI integrations and automation. E-commerce, booking and other custom solutions are scoped around your requirements.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-cost" aria-expanded="true" aria-controls="faq-answer-cost" disabled>How much does a website cost?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-cost" aria-labelledby="faq-cost">
+        <div class="faq-answer-inner"><p>Pricing depends on the project’s scope, functionality, design requirements and complexity. Share what you need and we’ll review it before providing a quotation.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-timeline" aria-expanded="true" aria-controls="faq-answer-timeline" disabled>How long does it take to build a website?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-timeline" aria-labelledby="faq-timeline">
+        <div class="faq-answer-inner"><p>The timeline depends on the project’s size, features, content readiness and revisions. We’ll discuss and confirm a realistic timeline before development begins.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-hosting" aria-expanded="true" aria-controls="faq-answer-hosting" disabled>Do I need to already have a domain and hosting?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-hosting" aria-labelledby="faq-hosting">
+        <div class="faq-answer-inner"><p>No. We can help with domain, hosting, DNS and SSL setup when needed. Domain, hosting and related third-party costs may be separate from development charges.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-responsive" aria-expanded="true" aria-controls="faq-answer-responsive" disabled>Will my website work properly on phones and tablets?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-responsive" aria-labelledby="faq-responsive">
+        <div class="faq-answer-inner"><p>We design responsive websites for modern desktop, tablet and mobile screens, with layouts and interactions adapted to each screen size.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-redesign" aria-expanded="true" aria-controls="faq-answer-redesign" disabled>Can Zyberlane redesign an existing website?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-redesign" aria-labelledby="faq-redesign">
+        <div class="faq-answer-inner"><p>Yes, depending on the website and your requirements. We can assess your current site and recommend whether improving it or rebuilding parts of it makes more sense.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-custom" aria-expanded="true" aria-controls="faq-answer-custom" disabled>Can you add booking, CMS, e-commerce or custom functionality?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-custom" aria-labelledby="faq-custom">
+        <div class="faq-answer-inner"><p>Yes, depending on the project’s requirements and feasibility. This can include booking or enquiry systems, content management, galleries, e-commerce, web applications, AI integrations and automation. Complex systems receive a custom quotation.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-support" aria-expanded="true" aria-controls="faq-answer-support" disabled>Do you provide support after the website launches?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-support" aria-labelledby="faq-support">
+        <div class="faq-answer-inner"><p>Ongoing maintenance and support options are available. Maintenance helps keep your website running; significant new features or functionality may need a separate quotation.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-international" aria-expanded="true" aria-controls="faq-answer-international" disabled>Can Zyberlane work with international clients?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-international" aria-labelledby="faq-international">
+        <div class="faq-answer-inner"><p>Yes. We work remotely with businesses outside Sri Lanka, with project scope, communication, payment arrangements and requirements agreed before work begins.</p></div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <h3><button type="button" class="faq-trigger" id="faq-quote" aria-expanded="true" aria-controls="faq-answer-quote" disabled>How do I get a quotation?<span class="faq-icon" aria-hidden="true"></span></button></h3>
+      <div class="faq-answer" id="faq-answer-quote" aria-labelledby="faq-quote">
+        <div class="faq-answer-inner"><p>Use the existing <a href="#contact">Get a Quote or WhatsApp option</a>, or <a href="#booking">send a project request</a>. Tell us about your business or project, what you need and any relevant requirements so we can review them and provide an appropriate quotation.</p></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1256,30 +1366,7 @@
     if (navItem) navItem.style.display = '';
   }
 
-  // ---------- testimonials ----------
-  function renderTestimonials(rows){
-    var section = document.getElementById('testimonials');
-    if (!rows || !rows.length){ if (section) section.style.display = 'none'; return; }
-    var grid = document.getElementById('testimonialsGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    rows.forEach(function(t){
-      var card = document.createElement('div');
-      card.className = 'skill-card testimonial-card reveal in';
-      card.innerHTML =
-        '<p></p>' +
-        '<div class="who">' +
-          (t.avatar_url ? '<img alt="">' : '') +
-          '<div><div class="name"></div><div class="role"></div></div>' +
-        '</div>';
-      card.querySelector('p').textContent = '"' + t.quote_text + '"';
-      card.querySelector('.name').textContent = t.client_name;
-      if (t.client_role) card.querySelector('.role').textContent = t.client_role;
-      if (t.avatar_url){ var img = card.querySelector('img'); var safeAvatar = safeUrl(t.avatar_url); if (safeAvatar){ img.src = safeAvatar; img.alt = t.client_name; } }
-      grid.appendChild(card);
-    });
-    if (section) section.style.display = '';
-  }
+  // ---------- testimonials are curated in static homepage markup ----------
 
   // ---------- portfolio projects ----------
   function buildProjectCardHtml(p, i){
@@ -1348,14 +1435,12 @@
     safeFetch(sb.from('site_settings').select('key, value')),
     safeFetch(sb.from('services').select('*').eq('is_active', true).order('sort_order')),
     safeFetch(sb.from('packages').select('*').eq('is_active', true).order('sort_order')),
-    safeFetch(sb.from('testimonials').select('*').eq('is_active', true).order('sort_order')),
     safeFetch(sb.from('projects').select('id, name, slug, category, description, live_url, cover_image_url, sort_order, created_at').eq('is_public', true).order('sort_order').order('created_at'))
   ]).then(function(results){
     var settings = results[0].value;
     var services = results[1].value;
     var packages = results[2].value;
-    var testimonials = results[3].value;
-    var projects = results[4].value;
+    var projects = results[3].value;
 
     if (settings) applySiteSettings(settings.map(function(r){
       // jsonb text values arrive already unwrapped as JS strings/booleans by supabase-js
@@ -1364,7 +1449,6 @@
     // Supabase cards match the curated copy; static cards remain the offline fallback.
     renderServices(services || []);
     renderPackages(packages || []);
-    renderTestimonials(testimonials || []);
     // The selected-work showcase uses the two curated project cards above.
   });
 })();
