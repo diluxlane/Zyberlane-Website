@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const root = path.resolve(__dirname, '../..');
+const root = path.resolve(__dirname, '..');
 const cpuSource = fs.readFileSync(path.join(root, 'assets/fluid-cpu.js'), 'utf8');
 const appSource = fs.readFileSync(path.join(root, 'assets/fluid.js'), 'utf8');
 
