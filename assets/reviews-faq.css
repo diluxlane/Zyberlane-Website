@@ -1,6 +1,7 @@
 /* Homepage additions use the existing type, color, spacing and motion tokens. */
-.stories-track{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px;}
-.story-panel{min-width:0;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:32px;}
+.stories-viewport{overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:var(--red) var(--panel);}
+.stories-track{display:flex;gap:24px;}
+.story-panel{flex:0 0 100%;min-width:0;scroll-snap-align:start;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:32px;}
 .story-rating{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
 .story-stars{color:var(--red-glow);font-size:22px;letter-spacing:.12em;line-height:1;}
 .story-rating-label,.story-source{font-family:'Space Mono',monospace;font-size:11px;color:#b7b3b0;line-height:1.6;}
@@ -14,7 +15,11 @@
 .review-more p{margin-top:14px;}
 .story-identity{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;margin-top:24px;padding-top:22px;border-top:1px solid var(--line);}
 .story-client{font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;}
-.story-business{margin-top:4px;color:#b7b3b0;font-size:13px;line-height:1.6;}
+.story-client-group{display:flex;align-items:center;gap:14px;min-width:0;}
+.story-logo{display:block;flex:0 0 56px;}
+.story-logo img{display:block;width:56px;height:56px;object-fit:contain;border-radius:4px;}
+.story-business{display:inline-block;margin-top:4px;color:#b7b3b0;font-size:13px;line-height:1.6;}
+.story-business:hover{color:var(--white);}
 .story-source{display:inline-flex;align-items:center;gap:8px;min-height:44px;}
 .story-source:hover{color:var(--white);}
 .google-mark{width:22px;height:22px;flex-shrink:0;}
@@ -28,12 +33,12 @@
 #testimonials .work-all:focus-visible,.stories-viewport:focus-visible{outline:2px solid var(--red-glow);outline-offset:3px;}
 .stories-controls{display:none;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;}
 .stories-controls .eyebrow{letter-spacing:.08em;}
+#testimonials.stories-ready .stories-controls{display:flex;}
 #testimonials.scroll-stories{height:var(--stories-height);padding-top:0;padding-bottom:0;}
-.scroll-stories .stories-sticky{position:sticky;top:90px;padding:28px 0 24px;}
-.scroll-stories .stories-viewport{overflow:hidden;}
+.scroll-stories .stories-sticky{position:sticky;top:var(--stories-top,90px);padding:28px 0 24px;}
+.scroll-stories .stories-viewport{overflow:hidden;scroll-snap-type:none;}
 .scroll-stories .stories-track{display:flex;flex-direction:row-reverse;width:max-content;will-change:transform;}
 .scroll-stories .story-panel{flex:0 0 auto;width:var(--stories-panel-width);}
-.scroll-stories .stories-controls{display:flex;}
 .faq-list{max-width:960px;margin-left:auto;}
 .faq-item{border-bottom:1px solid var(--line);}
 .faq-item h3{font-family:'Poppins',sans-serif;font-weight:500;}
@@ -52,7 +57,7 @@
 .faq-ready .faq-answer{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .32s var(--ease),visibility .32s;}
 .faq-ready .faq-answer.is-open{grid-template-rows:1fr;visibility:visible;}
 @media(max-width:860px){
-  .stories-track{grid-template-columns:minmax(0,1fr);gap:16px;}
+  .stories-track{gap:16px;}
   .story-panel{padding:24px;}
   .review-copy p{font-size:16px;}
   .google-review-panel>.google-mark{margin-bottom:20px;}
@@ -67,6 +72,6 @@
 }
 @media(prefers-reduced-motion:reduce){
   #testimonials .work-all:active{scale:1;}
-  .stories-track{grid-template-columns:minmax(0,1fr);will-change:auto;}
+  .stories-track{will-change:auto;}
   .faq-ready .faq-answer,.faq-icon::after{transition:none;}
 }

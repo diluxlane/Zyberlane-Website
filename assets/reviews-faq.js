@@ -39,42 +39,56 @@
 
   function update() {
     frame = 0;
-    if (!active) return;
-    var progress = Math.max(0, Math.min(1, (stickyTop - section.getBoundingClientRect().top) / distance));
+    var progress = active
+      ? Math.max(0, Math.min(1, (stickyTop - section.getBoundingClientRect().top) / distance))
+      : distance ? viewport.scrollLeft / distance : 0;
     // Portfolio moves left as progress increases. A reversed flex track keeps
     // the real review first while these panels move right toward the Google CTA.
-    track.style.transform = 'translate3d(' + (-(1 - progress) * distance) + 'px,0,0)';
+    if (active) track.style.transform = 'translate3d(' + (-(1 - progress) * distance) + 'px,0,0)';
     index = Math.round(progress * (panels().length - 1));
     previous.disabled = index === 0;
     next.disabled = index === panels().length - 1;
   }
   function schedule() {
-    if (active && !frame) frame = requestAnimationFrame(update);
+    if (!frame) frame = requestAnimationFrame(update);
   }
   function measure() {
     measureFrame = 0;
     var wasActive = active;
     var oldTop = section.getBoundingClientRect().top;
     var wasPinned = wasActive && oldTop <= stickyTop && oldTop > stickyTop - distance;
+    var oldIndex = index;
     active = false;
     section.classList.remove('scroll-stories');
     section.style.removeProperty('--stories-height');
+    section.style.removeProperty('--stories-top');
     track.style.removeProperty('--stories-panel-width');
     track.style.transform = '';
     viewport.scrollLeft = 0;
-    viewport.removeAttribute('tabindex');
+    viewport.setAttribute('tabindex', '0');
     // Reading the complete review uses normal page flow, including short windows.
     if (!reduced.matches && !disclosures.some(function (disclosure) { return disclosure.open; })) {
       track.style.setProperty('--stories-panel-width', viewport.clientWidth + 'px');
       section.classList.add('scroll-stories');
       distance = Math.max(0, track.scrollWidth - viewport.clientWidth);
-      active = distance > 0 && sticky.offsetHeight <= window.innerHeight - stickyTop - 24;
+      active = distance > 0;
       if (active) {
+        // A tall card enters in normal vertical flow before pinning, so its
+        // content can be read even on a short screen without stacking the CTA.
+        stickyTop = Math.min(90, window.innerHeight - sticky.offsetHeight - 24);
+        section.style.setProperty('--stories-top', stickyTop + 'px');
         section.style.setProperty('--stories-height', (sticky.offsetHeight + distance + 56) + 'px');
-        viewport.setAttribute('tabindex', '0');
       } else {
         section.classList.remove('scroll-stories');
       }
+    }
+    if (!active) {
+      // Expanded reviews and reduced motion keep the same horizontal order
+      // using the Portfolio's native overflow fallback, never a stacked CTA.
+      track.style.removeProperty('--stories-panel-width');
+      distance = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      var list = panels();
+      viewport.scrollLeft = list[Math.min(oldIndex, list.length - 1)].offsetLeft - list[0].offsetLeft;
     }
     // Preserve the reading position when an expanded review leaves the pinned rail.
     if (wasPinned && !active) window.scrollTo({ top: window.scrollY + oldTop - stickyTop, behavior: 'instant' });
@@ -84,33 +98,35 @@
     if (!measureFrame) measureFrame = requestAnimationFrame(measure);
   }
   function go(target) {
-    if (!active) return;
     var list = panels();
     target = Math.max(0, Math.min(list.length - 1, target));
-    var offset = list[0].offsetLeft - list[target].offsetLeft;
-    window.scrollTo({
-      top: window.scrollY + section.getBoundingClientRect().top - stickyTop + offset,
-      behavior: reduced.matches ? 'instant' : 'smooth'
-    });
+    var behavior = reduced.matches ? 'instant' : 'smooth';
+    if (active) {
+      var offset = list[0].offsetLeft - list[target].offsetLeft;
+      window.scrollTo({ top: window.scrollY + section.getBoundingClientRect().top - stickyTop + offset, behavior: behavior });
+    } else {
+      viewport.scrollTo({ left: list[target].offsetLeft - list[0].offsetLeft, behavior: behavior });
+    }
   }
   previous.addEventListener('click', function () { go(index - 1); });
   next.addEventListener('click', function () { go(index + 1); });
   viewport.addEventListener('keydown', function (event) {
-    if (!active || event.target !== viewport) return;
+    if (event.target !== viewport) return;
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
-      go(index + (event.key === 'ArrowLeft' ? 1 : -1));
+      go(index + (event.key === (active ? 'ArrowLeft' : 'ArrowRight') ? 1 : -1));
     }
   });
   viewport.addEventListener('focusin', function (event) {
     var panel = event.target.closest('.story-panel');
-    if (active && panel) {
+    if (panel) {
       // A keyboard focus move must also bring the focused panel into view.
-      viewport.scrollLeft = 0;
+      if (active) viewport.scrollLeft = 0;
       go(panels().indexOf(panel));
     }
   });
   disclosures.forEach(function (disclosure) { disclosure.addEventListener('toggle', scheduleMeasure); });
+  viewport.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', scheduleMeasure);
   window.addEventListener('load', scheduleMeasure);
@@ -118,5 +134,6 @@
   reduced.addEventListener('change', measure);
   if ('ResizeObserver' in window) new ResizeObserver(scheduleMeasure).observe(sticky);
   if (document.fonts) document.fonts.ready.then(scheduleMeasure);
+  section.classList.add('stories-ready');
   measure();
 })();
