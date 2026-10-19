@@ -32,6 +32,7 @@
   let cpu = null;
   let targets = [];
   let initialized = false, homeReady = !homeMode, boundInputTarget = null;
+  let allocationWidth = 0, allocationHeight = 0;
 
   function reportError(message) {
     errorCount++;
@@ -249,16 +250,24 @@
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
-  function resize() {
+  function resize(displayOnly = false) {
     if ((!gl && !cpu) || lost || failed) return;
-    const ratio = Math.min(devicePixelRatio || 1, coarse.matches ? 1.25 : 1.5);
+    const ratio = Math.min(devicePixelRatio || 1, coarse.matches ? (homeMode && adaptiveLow ? 1 : 1.25) : 1.5);
     const scale = Math.min(ratio, 1920 / Math.max(innerWidth, innerHeight));
     const width = Math.max(1, Math.round(innerWidth * scale));
     const height = Math.max(1, Math.round(innerHeight * scale));
     if (canvas.width === width && canvas.height === height && (velocity || cpu?.width)) return;
     canvas.width = width; canvas.height = height;
-    pointers.clear(); pending.length = 0; allocate(homeMode);
-    if (!paused) seed();
+    // Browser chrome often changes only touch viewport height while scrolling.
+    // Reuse normalized fields within a bounded size change; orientation/large
+    // geometry changes still resample them through the existing allocation path.
+    const reuse = (velocity || cpu?.width) && (displayOnly || (homeMode && coarse.matches
+      && innerWidth === allocationWidth && Math.abs(innerHeight - allocationHeight) <= allocationHeight * 0.2));
+    if (!reuse) {
+      pointers.clear(); pending.length = 0; allocate(homeMode);
+      allocationWidth = innerWidth; allocationHeight = innerHeight;
+      if (!paused) seed();
+    }
     render();
   }
 
@@ -344,8 +353,12 @@
     const rawDt = lastTime ? (now - lastTime) / 1000 : 1 / 60;
     const dt = Math.min(1 / 30, Math.max(1 / 240, rawDt));
     lastTime = now; elapsed += dt;
+    // The homepage starts empty and has no ambient emission. Until real input,
+    // all simulation passes and full-screen blending would only redraw black.
+    const idle = homeMode && splatCount === 0 && pending.length === 0;
     try {
-      step(dt); render(); frameCount++; sampleTime += rawDt; sampleFrames++;
+      if (!idle) { step(dt); render(); }
+      frameCount++; sampleTime += rawDt; sampleFrames++;
       if (now - lastMetrics >= 750) {
         const fps = Math.round(sampleFrames / Math.max(sampleTime, 0.001));
         text(metrics, `Frames: ${frameCount} · ${fps} fps · ${canvas.width}×${canvas.height}`);
@@ -355,8 +368,12 @@
           canvas.dataset.fluidInput = lastInput;
           canvas.dataset.fluidMoves = String(moveCount);
         }
-        if (frameCount > 150 && quality.value === 'auto' && !adaptiveLow && !coarse.matches && fps < 38) {
-          adaptiveLow = true; allocate(homeMode); seed();
+        if (!idle && frameCount > 150 && quality.value === 'auto' && !adaptiveLow && fps < 38) {
+          adaptiveLow = true;
+          // A sustained slow touch device can reduce the display backing size
+          // while retaining the same simulation/dye quality and live fields.
+          if (homeMode && coarse.matches) resize(true); else allocate(homeMode);
+          seed();
         }
         sampleTime = 0; sampleFrames = 0; lastMetrics = now;
       }

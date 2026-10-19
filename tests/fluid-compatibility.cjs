@@ -185,9 +185,11 @@ console.log('PASS: homepage initializes without lab controls; document handlers 
 for (const touch of [false, true]) {
   const idle = harness({ home: true, noGL: true, touch });
   assert.equal(idle.splats, 0, 'initial allocation must not inject dye or velocity');
-  idle.tick(400); // Ten simulated seconds with the actual solver/render loop running.
+  const initialRenders = idle.rendered;
+  idle.tick(400); // Ten simulated seconds with the frame scheduler running.
   assert.equal(idle.splats, 0, 'idle frames must not emit');
-  assert.ok(idle.rendered >= 400, 'the render loop must continue before interaction');
+  assert.equal(idle.rendered, initialRenders, 'an empty field needs no simulation/display passes');
+  assert.equal(idle.callbacks.size, 1, 'input still has one responsive scheduler');
   for (const field of ['u', 'v', 'dye']) assert.ok(idle.fluids[0][field].every(value => value === 0));
   assert.ok(idle.fluids[0].image.data.every((value, i) => i % 4 === 3 || value === 0));
 
@@ -259,18 +261,20 @@ for (const touch of [false, true]) {
   const solver = live.fluids[0];
   solver.splat(0.5, 0.5, 40, 20, 1, 0.0015);
   solver.step = () => {};
+  const originalField = solver.dye;
   for (const height of [764, 844, 600, 900, 844]) {
     live.sandbox.innerHeight = height;
     live.winEvents.resize();
     assert.ok(solver.dye.some(value => value > 0.05), 'resizing must preserve the live dye');
     for (const field of ['u', 'v', 'dye', 'pressure']) assert.ok(solver[field].every(Number.isFinite));
     assert.equal(live.callbacks.size, 1, 'resize must retain exactly one loop');
+    if (touch && height === 764) assert.equal(solver.dye, originalField, 'browser-toolbar resize must reuse the live simulation');
   }
 }
 const adaptive = harness({ home: true, noGL: true });
 adaptive.fluids[0].step = () => {};
 adaptive.tick(150, 40); // 25 fps: original automatic quality threshold.
-adaptive.fluids[0].splat(0.5, 0.5, 40, 20, 1, 0.0015);
+adaptive.docEvents.pointerdown({ isTrusted: true, pointerType: 'mouse', pointerId: 1, button: 0, clientX: 640, clientY: 422, timeStamp: 6000 });
 const oldWidth = adaptive.fluids[0].width;
 adaptive.tick(2, 40);
 assert.ok(adaptive.fluids[0].width < oldWidth, 'automatic quality reduction still occurs');
@@ -279,6 +283,21 @@ assert.equal(adaptive.callbacks.size, 1);
 adaptive.fluids[0].clear();
 assert.ok(adaptive.fluids[0].dye.every(value => value === 0), 'explicit clear must still clear');
 console.log('PASS: repeated desktop/mobile viewport resizing and low-FPS quality reduction retain live fields, finite data and one RAF; explicit clear still works');
+
+for (const interval of [16, 40]) {
+  const touch = harness({ home: true, noGL: true, touch: true });
+  touch.fluids[0].step = () => {};
+  const dye = touch.fluids[0].dye, image = touch.fluids[0].image;
+  const width = touch.get('fluid').width;
+  touch.docEvents.touchstart({ isTrusted: true, changedTouches: [contact], timeStamp: 0 });
+  touch.tick(200, interval);
+  assert.equal(touch.get('fluid').width < width, interval === 40, 'only a sustained slow device lowers its display backing');
+  assert.equal(touch.fluids[0].dye, dye, 'display adaptation must retain the live simulation buffer');
+  assert.equal(touch.fluids[0].image, image, 'display adaptation must not reallocate internal fields');
+  assert.ok(dye.some(value => value > 0.05));
+  assert.equal(touch.callbacks.size, 1);
+}
+console.log('PASS: fast touch devices keep quality; slow touch devices lower only display resolution without reallocating or clearing live fields');
 
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 assert.match(html, /<canvas id="fluid" data-fluid-home aria-hidden="true"><\/canvas>/);
