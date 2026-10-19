@@ -91,9 +91,9 @@ function harness({ noGL = false, shaderFailure = false, reduced = false, touch =
       const query = queries.get('(prefers-reduced-motion: reduce)');
       query.matches = matches; query.change({ matches });
     },
-    tick(count = 1) {
+    tick(count = 1, interval = 25) {
       for (let i = 0; i < count; i++) {
-        now += 25; const jobs = [...callbacks.values()]; callbacks.clear();
+        now += interval; const jobs = [...callbacks.values()]; callbacks.clear();
         for (const job of jobs) job(now);
       }
     },
@@ -250,6 +250,35 @@ loadingHome.finishLoading();
 assert.equal(loadingHome.get('fluid').dataset.state, 'running');
 assert.equal(loadingHome.callbacks.size, 1);
 console.log('PASS: homepage waits for the existing loading screen before starting its atmosphere');
+
+// Viewport resize (including mobile browser chrome) and a slow frame sample
+// must not replace a live trail with empty fields. Freeze advection here so
+// a discontinuity cannot be mistaken for natural dissipation.
+for (const touch of [false, true]) {
+  const live = harness({ home: true, noGL: true, touch });
+  const solver = live.fluids[0];
+  solver.splat(0.5, 0.5, 40, 20, 1, 0.0015);
+  solver.step = () => {};
+  for (const height of [764, 844, 600, 900, 844]) {
+    live.sandbox.innerHeight = height;
+    live.winEvents.resize();
+    assert.ok(solver.dye.some(value => value > 0.05), 'resizing must preserve the live dye');
+    for (const field of ['u', 'v', 'dye', 'pressure']) assert.ok(solver[field].every(Number.isFinite));
+    assert.equal(live.callbacks.size, 1, 'resize must retain exactly one loop');
+  }
+}
+const adaptive = harness({ home: true, noGL: true });
+adaptive.fluids[0].step = () => {};
+adaptive.tick(150, 40); // 25 fps: original automatic quality threshold.
+adaptive.fluids[0].splat(0.5, 0.5, 40, 20, 1, 0.0015);
+const oldWidth = adaptive.fluids[0].width;
+adaptive.tick(2, 40);
+assert.ok(adaptive.fluids[0].width < oldWidth, 'automatic quality reduction still occurs');
+assert.ok(adaptive.fluids[0].dye.some(value => value > 0.05), 'quality reduction must preserve the live trail');
+assert.equal(adaptive.callbacks.size, 1);
+adaptive.fluids[0].clear();
+assert.ok(adaptive.fluids[0].dye.every(value => value === 0), 'explicit clear must still clear');
+console.log('PASS: repeated desktop/mobile viewport resizing and low-FPS quality reduction retain live fields, finite data and one RAF; explicit clear still works');
 
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 assert.match(html, /<canvas id="fluid" data-fluid-home aria-hidden="true"><\/canvas>/);

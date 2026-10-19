@@ -14,11 +14,31 @@
       if (!this.context || !this.surfaceContext) throw new Error('Canvas2D rendering is unavailable.');
     }
 
-    resize(width, height, iterations) {
+    resize(width, height, iterations, preserve = false) {
+      const previous = preserve && this.dye
+        ? { width: this.width, height: this.height, u: this.u, v: this.v, dye: this.dye, pressure: this.pressure } : null;
       this.width = width; this.height = height; this.iterations = iterations;
       const length = width * height;
       for (const name of ['u', 'v', 'nextU', 'nextV', 'dye', 'nextDye', 'curl', 'divergence', 'pressure', 'nextPressure']) {
         this[name] = new Float32Array(length);
+      }
+      // Match the GPU texture copy: resample live fields, leaving scratch grids
+      // empty. Initial allocation and an explicit reset still start at zero.
+      if (previous) {
+        for (let j = 0; j < height; j++) {
+          const y = Math.max(0, Math.min(previous.height - 1, (j + 0.5) * previous.height / height - 0.5));
+          const y0 = Math.floor(y), y1 = Math.min(y0 + 1, previous.height - 1), sy = y - y0;
+          for (let i = 0; i < width; i++) {
+            const x = Math.max(0, Math.min(previous.width - 1, (i + 0.5) * previous.width / width - 0.5));
+            const x0 = Math.floor(x), x1 = Math.min(x0 + 1, previous.width - 1), sx = x - x0;
+            for (const name of ['u', 'v', 'dye', 'pressure']) {
+              const field = previous[name];
+              this[name][j * width + i] =
+                (field[y0 * previous.width + x0] * (1 - sx) + field[y0 * previous.width + x1] * sx) * (1 - sy)
+                + (field[y1 * previous.width + x0] * (1 - sx) + field[y1 * previous.width + x1] * sx) * sy;
+            }
+          }
+        }
       }
       this.surface.width = width; this.surface.height = height;
       this.image = this.surfaceContext.createImageData(width, height);
