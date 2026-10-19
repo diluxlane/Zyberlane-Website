@@ -199,17 +199,18 @@
       : [shortSide, Math.round(shortSide / Math.max(aspect, 0.4))];
   }
 
-  function allocate() {
+  function allocate(preserve = false) {
     const low = quality.value === 'low' || (quality.value === 'auto' && (coarse.matches || adaptiveLow));
     if (cpu) {
       const resolution = quality.value === 'high' ? 152 : low ? (homeMode ? 80 : 96) : (homeMode ? 112 : 128);
       const dimensions = size(resolution);
-      cpu.resize(...dimensions, low ? 12 : 16);
+      cpu.resize(...dimensions, low ? 12 : 16, preserve);
       text(engine, `Renderer: Canvas2D fluid · grid ${dimensions.join('×')}${low ? ' · low' : ''}`);
       canvas.dataset.renderer = 'canvas2d-fluid';
       return;
     }
-    for (const item of targets) { gl.deleteTexture(item.texture); gl.deleteFramebuffer(item.fbo); }
+    const previousTargets = targets;
+    const previous = preserve && velocity ? [velocity.read, dye.read, pressure.read] : null;
     targets = [];
     const simSize = size(low ? 96 : 144);
     const dyeSize = size(low ? 384 : 640);
@@ -218,6 +219,14 @@
     pressure = doubleTarget(...simSize, gl.NEAREST);
     divergence = target(...simSize, gl.NEAREST);
     curl = target(...simSize, gl.NEAREST);
+    // Resize live fields before releasing their textures. Empty allocations cut
+    // off existing trails on viewport changes and automatic quality reduction.
+    if (previous) {
+      [velocity.read, dye.read, pressure.read].forEach((destination, i) => {
+        draw(programs.clear, destination, { uSource: previous[i] }, { uValue: 1 });
+      });
+    }
+    for (const item of previousTargets) { gl.deleteTexture(item.texture); gl.deleteFramebuffer(item.fbo); }
     text(engine, `Renderer: WebGL2 fluid · grid ${simSize.join('×')} · dye ${dyeSize.join('×')}${low ? ' · low' : ''}`);
     canvas.dataset.renderer = 'webgl2-fluid';
   }
@@ -248,7 +257,7 @@
     const height = Math.max(1, Math.round(innerHeight * scale));
     if (canvas.width === width && canvas.height === height && (velocity || cpu?.width)) return;
     canvas.width = width; canvas.height = height;
-    pointers.clear(); pending.length = 0; allocate();
+    pointers.clear(); pending.length = 0; allocate(homeMode);
     if (!paused) seed();
     render();
   }
@@ -347,7 +356,7 @@
           canvas.dataset.fluidMoves = String(moveCount);
         }
         if (frameCount > 150 && quality.value === 'auto' && !adaptiveLow && !coarse.matches && fps < 38) {
-          adaptiveLow = true; allocate(); seed();
+          adaptiveLow = true; allocate(homeMode); seed();
         }
         sampleTime = 0; sampleFrames = 0; lastMetrics = now;
       }
