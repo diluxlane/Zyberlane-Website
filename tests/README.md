@@ -15,7 +15,9 @@ node --check assets/site-pages.js
 The security verifier checks executable script syntax, JSON-LD, inline-script
 hashes against both hosting CSPs, package rendering/XSS guards, and pinned SDK
 attributes. The reviews/FAQ suite checks review content, scroll geometry and
-controls, FAQ state, ARIA and focus, and mobile/reduced-motion fallbacks.
+controls, reverse travel, future review panels, FAQ state, ARIA and focus, and
+short-window/reduced-motion fallbacks. Touch viewports use the vertical-driven
+review track when its content fits; taller content remains in normal page flow.
 
 ## Homepage fluid integration
 
@@ -54,6 +56,9 @@ visibility and reduced motion. Homepage coverage also checks initialization with
 simulation controls, passive touch handlers, touch Pointer Event deduplication,
 cancellation, mouse movement, one document binding after fallback, loader sequencing,
 no initial graphics under reduced motion, and non-intercepting homepage markup/styles.
+Live-field regressions also cover repeated viewport resizing (including mobile
+browser chrome) and the original automatic low-FPS quality threshold. Both must
+retain existing dye while keeping one animation loop; explicit clear still works.
 
 The scripts are served from the same origin. The existing CSP and its inline-script
 hashes must remain valid; changes to inline executable scripts require matching

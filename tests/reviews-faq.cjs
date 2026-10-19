@@ -24,7 +24,7 @@ class Element {
   contains(el) { return el === this; }
   focus() { this.focused = true; }
 }
-function setup({ desktop = true, reduced = false, height = 900, observer = true, distance = 300 } = {}) {
+function setup({ desktop = true, reduced = false, height = 900, observer = true, distance = 300, count = 2 } = {}) {
   const window = new Element();
   const document = { activeElement: null };
   const section = new Element(), sticky = new Element(), viewport = new Element(), track = new Element();
@@ -36,8 +36,12 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
   });
   faq.querySelectorAll = () => items;
   section.querySelector = s => ({ '.stories-sticky': sticky, '.stories-viewport': viewport, '.stories-track': track, '.review-more': disclosure })[s];
+  section.querySelectorAll = () => [disclosure];
   document.getElementById = id => ({ faq, testimonials: section, storiesPrevious: previous, storiesNext: next })[id];
   const first = new Element(), last = new Element();
+  const panels = [first, ...Array.from({ length: count - 2 }, () => new Element()), last];
+  panels.forEach((panel, i) => { panel.offsetLeft = distance * (1 - i / (count - 1)); });
+  track.querySelectorAll = () => panels;
   track.firstElementChild = first;
   track.scrollWidth = 1000 + distance; viewport.clientWidth = 1000; sticky.offsetHeight = 500;
   section.top = 200; section.getBoundingClientRect = () => ({ top: section.top });
@@ -62,7 +66,7 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
       const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn());
     }
   }
-  return { window, document, section, sticky, viewport, track, previous, next, disclosure, faq, items, first, last, desktopMedia, reducedMedia, scrolls, frames, flush, resize };
+  return { window, document, section, sticky, viewport, track, previous, next, disclosure, faq, items, first, last, panels, desktopMedia, reducedMedia, scrolls, frames, flush, resize };
 }
 
 const faq = setup();
@@ -88,7 +92,8 @@ assert.equal(faq.items[0].button.focused, true, 'closing content does not strand
 
 const rail = setup();
 assert.ok(rail.section.classes.has('scroll-stories'));
-assert.equal(rail.section.style['--stories-height'], '800px');
+assert.equal(rail.section.style['--stories-height'], '856px');
+assert.equal(rail.track.style.transform, 'translate3d(-300px,0,0)');
 assert.equal(rail.viewport.getAttribute('tabindex'), '0');
 assert.equal(rail.previous.disabled, true);
 rail.section.top = -60;
@@ -97,10 +102,10 @@ assert.equal(rail.frames.size, 1, 'scroll updates coalesce into one animation fr
 rail.flush();
 assert.equal(rail.track.style.transform, 'translate3d(-150px,0,0)');
 rail.section.top = -1000; rail.window.emit('scroll'); rail.flush();
-assert.equal(rail.track.style.transform, 'translate3d(-300px,0,0)');
+assert.equal(rail.track.style.transform, 'translate3d(0px,0,0)');
 assert.equal(rail.next.disabled, true);
 rail.section.top = 200; rail.window.emit('scroll'); rail.flush();
-assert.equal(rail.track.style.transform, 'translate3d(0px,0,0)');
+assert.equal(rail.track.style.transform, 'translate3d(-300px,0,0)');
 assert.equal(rail.previous.disabled, true);
 assert.equal(rail.window.events.scroll[0].options.passive, true);
 assert.equal(rail.window.events.wheel, undefined);
@@ -108,12 +113,14 @@ assert.equal(rail.viewport.events.touchmove, undefined);
 rail.next.emit('click'); assert.equal(rail.scrolls.at(-1).top, 1410);
 let prevented = false;
 rail.viewport.emit('keydown', { key: 'ArrowLeft', preventDefault: () => { prevented = true; } });
-assert.equal(prevented, true); assert.equal(rail.scrolls.at(-1).top, 1110);
+assert.equal(prevented, true); assert.equal(rail.scrolls.at(-1).top, 1410);
+rail.viewport.emit('keydown', { key: 'ArrowRight', preventDefault() {} });
+assert.equal(rail.scrolls.at(-1).top, 1110);
 rail.viewport.emit('keydown', { target: { closest: () => rail.last }, key: 'ArrowRight', preventDefault: () => assert.fail('nested controls keep their keys') });
 rail.viewport.emit('focusin', { target: { closest: () => rail.last } });
 assert.equal(rail.scrolls.at(-1).top, 1410, 'keyboard focus reveals the Google panel');
 rail.track.scrollWidth = 1400; rail.sticky.offsetHeight = 510;
-rail.resize(); rail.flush(); assert.equal(rail.section.style['--stories-height'], '910px');
+rail.resize(); rail.flush(); assert.equal(rail.section.style['--stories-height'], '966px');
 
 rail.section.top = -110; rail.disclosure.open = true; rail.disclosure.emit('toggle'); rail.flush();
 assert.equal(rail.section.classes.has('scroll-stories'), false);
@@ -127,7 +134,15 @@ assert.equal(rail.section.classes.has('scroll-stories'), false);
 assert.equal(rail.track.style.transform, '');
 assert.equal(rail.viewport.getAttribute('tabindex'), undefined);
 
-for (const options of [{ desktop: false }, { reduced: true }, { height: 500 }, { distance: 0 }]) {
+assert.ok(setup({ desktop: false }).section.classes.has('scroll-stories'), 'touch uses vertical-driven motion when panels fit');
+const future = setup({ count: 3, distance: 600 });
+future.section.top = -210; future.window.emit('scroll'); future.flush();
+assert.equal(future.track.style.transform, 'translate3d(-300px,0,0)');
+future.next.emit('click'); assert.equal(future.scrolls.at(-1).top, 1300, 'next reaches the Google panel after future reviews');
+future.viewport.emit('focusin', { target: { closest: () => future.panels[1] } });
+assert.equal(future.scrolls.at(-1).top, 1000, 'focus can reveal an intermediate future review');
+
+for (const options of [{ reduced: true }, { height: 500 }, { distance: 0 }]) {
   const state = setup(options);
   assert.equal(state.section.classes.has('scroll-stories'), false);
   state.window.emit('scroll'); assert.equal(state.frames.size, 0);
@@ -151,7 +166,8 @@ assert.ok(html.indexOf('<section id="faq"') < html.indexOf('<section id="contact
 assert.equal((stories.match(/<article /g) || []).length, 1, 'only one genuine testimonial');
 assert.equal((stories.match(/<aside /g) || []).length, 1, 'Google CTA is not a second testimonial');
 assert.ok(!stories.includes('libfile_') && !stories.includes('openinapp'));
-assert.equal((stories.match(/href="https:\/\/maps.app.goo.gl\/43SbLYGa6dmvyjkN6" target="_blank" rel="noopener noreferrer"/g) || []).length, 2);
+assert.equal((stories.match(/href="https:\/\/maps.app.goo.gl\/43SbLYGa6dmvyjkN6" target="_blank" rel="noopener noreferrer"/g) || []).length, 3);
+assert.equal((stories.match(/>View All Reviews <span aria-hidden="true">↗<\/span><\/a>/g) || []).length, 2);
 assert.ok(!html.includes("sb.from('testimonials')"), 'CMS cannot replace or hide the supplied review');
 assert.ok(!html.includes('"@type": "FAQPage"'));
 assert.equal((html.match(/class="faq-trigger"/g) || []).length, 10);

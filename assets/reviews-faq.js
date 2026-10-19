@@ -33,17 +33,20 @@
   var track = section.querySelector('.stories-track');
   var previous = document.getElementById('storiesPrevious');
   var next = document.getElementById('storiesNext');
-  var disclosure = section.querySelector('.review-more');
-  var desktop = window.matchMedia('(min-width:861px) and (hover:hover) and (pointer:fine)');
-  var active = false, distance = 0, frame = 0, measureFrame = 0, stickyTop = 90;
+  var disclosures = Array.from(section.querySelectorAll('.review-more'));
+  var active = false, distance = 0, index = 0, frame = 0, measureFrame = 0, stickyTop = 90;
+  function panels() { return Array.from(track.querySelectorAll('.story-panel')); }
 
   function update() {
     frame = 0;
     if (!active) return;
     var progress = Math.max(0, Math.min(1, (stickyTop - section.getBoundingClientRect().top) / distance));
-    track.style.transform = 'translate3d(' + (-progress * distance) + 'px,0,0)';
-    previous.disabled = progress <= 0.001;
-    next.disabled = progress >= 0.999;
+    // Portfolio moves left as progress increases. A reversed flex track keeps
+    // the real review first while these panels move right toward the Google CTA.
+    track.style.transform = 'translate3d(' + (-(1 - progress) * distance) + 'px,0,0)';
+    index = Math.round(progress * (panels().length - 1));
+    previous.disabled = index === 0;
+    next.disabled = index === panels().length - 1;
   }
   function schedule() {
     if (active && !frame) frame = requestAnimationFrame(update);
@@ -56,16 +59,18 @@
     active = false;
     section.classList.remove('scroll-stories');
     section.style.removeProperty('--stories-height');
+    track.style.removeProperty('--stories-panel-width');
     track.style.transform = '';
     viewport.scrollLeft = 0;
     viewport.removeAttribute('tabindex');
     // Reading the complete review uses normal page flow, including short windows.
-    if (desktop.matches && !reduced.matches && !disclosure.open) {
+    if (!reduced.matches && !disclosures.some(function (disclosure) { return disclosure.open; })) {
+      track.style.setProperty('--stories-panel-width', viewport.clientWidth + 'px');
       section.classList.add('scroll-stories');
       distance = Math.max(0, track.scrollWidth - viewport.clientWidth);
       active = distance > 0 && sticky.offsetHeight <= window.innerHeight - stickyTop - 24;
       if (active) {
-        section.style.setProperty('--stories-height', (sticky.offsetHeight + distance) + 'px');
+        section.style.setProperty('--stories-height', (sticky.offsetHeight + distance + 56) + 'px');
         viewport.setAttribute('tabindex', '0');
       } else {
         section.classList.remove('scroll-stories');
@@ -78,20 +83,23 @@
   function scheduleMeasure() {
     if (!measureFrame) measureFrame = requestAnimationFrame(measure);
   }
-  function go(last) {
+  function go(target) {
     if (!active) return;
+    var list = panels();
+    target = Math.max(0, Math.min(list.length - 1, target));
+    var offset = list[0].offsetLeft - list[target].offsetLeft;
     window.scrollTo({
-      top: window.scrollY + section.getBoundingClientRect().top - stickyTop + (last ? distance : 0),
+      top: window.scrollY + section.getBoundingClientRect().top - stickyTop + offset,
       behavior: reduced.matches ? 'instant' : 'smooth'
     });
   }
-  previous.addEventListener('click', function () { go(false); });
-  next.addEventListener('click', function () { go(true); });
+  previous.addEventListener('click', function () { go(index - 1); });
+  next.addEventListener('click', function () { go(index + 1); });
   viewport.addEventListener('keydown', function (event) {
     if (!active || event.target !== viewport) return;
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
-      go(event.key === 'ArrowRight');
+      go(index + (event.key === 'ArrowLeft' ? 1 : -1));
     }
   });
   viewport.addEventListener('focusin', function (event) {
@@ -99,15 +107,14 @@
     if (active && panel) {
       // A keyboard focus move must also bring the focused panel into view.
       viewport.scrollLeft = 0;
-      go(panel !== track.firstElementChild);
+      go(panels().indexOf(panel));
     }
   });
-  disclosure.addEventListener('toggle', scheduleMeasure);
+  disclosures.forEach(function (disclosure) { disclosure.addEventListener('toggle', scheduleMeasure); });
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', scheduleMeasure);
   window.addEventListener('load', scheduleMeasure);
   window.addEventListener('pageshow', scheduleMeasure);
-  desktop.addEventListener('change', scheduleMeasure);
   reduced.addEventListener('change', measure);
   if ('ResizeObserver' in window) new ResizeObserver(scheduleMeasure).observe(sticky);
   if (document.fonts) document.fonts.ready.then(scheduleMeasure);
