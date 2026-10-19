@@ -10,6 +10,7 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 class Element {
   constructor() {
     this.attrs = {}; this.events = {}; this.classes = new Set(); this.disabled = false;
+    this.scrollLeft = 0; this.scrolls = [];
     this.classList = {
       add: c => this.classes.add(c), remove: c => this.classes.delete(c),
       toggle: (c, on) => on ? this.classes.add(c) : this.classes.delete(c)
@@ -23,6 +24,7 @@ class Element {
   emit(k, event = {}) { for (const { fn } of this.events[k] || []) fn({ target: this, ...event }); }
   contains(el) { return el === this; }
   focus() { this.focused = true; }
+  scrollTo(options) { this.scrolls.push(options); this.scrollLeft = options.left; this.emit('scroll'); }
 }
 function setup({ desktop = true, reduced = false, height = 900, observer = true, distance = 300, count = 2 } = {}) {
   const window = new Element();
@@ -40,7 +42,9 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
   document.getElementById = id => ({ faq, testimonials: section, storiesPrevious: previous, storiesNext: next })[id];
   const first = new Element(), last = new Element();
   const panels = [first, ...Array.from({ length: count - 2 }, () => new Element()), last];
-  panels.forEach((panel, i) => { panel.offsetLeft = distance * (1 - i / (count - 1)); });
+  panels.forEach((panel, i) => Object.defineProperty(panel, 'offsetLeft', { get: () =>
+    (track.scrollWidth - viewport.clientWidth) * (section.classes.has('scroll-stories') ? 1 - i / (count - 1) : i / (count - 1))
+  }));
   track.querySelectorAll = () => panels;
   track.firstElementChild = first;
   track.scrollWidth = 1000 + distance; viewport.clientWidth = 1000; sticky.offsetHeight = 500;
@@ -132,7 +136,11 @@ assert.equal(rail.section.classes.has('scroll-stories'), true);
 rail.reducedMedia.matches = true; rail.reducedMedia.emit('change');
 assert.equal(rail.section.classes.has('scroll-stories'), false);
 assert.equal(rail.track.style.transform, '');
-assert.equal(rail.viewport.getAttribute('tabindex'), undefined);
+assert.equal(rail.viewport.getAttribute('tabindex'), '0');
+rail.next.emit('click'); rail.flush();
+assert.equal(rail.viewport.scrolls.at(-1).left, 400, 'reduced motion can reach the next horizontal panel');
+rail.previous.emit('click'); rail.flush();
+assert.equal(rail.viewport.scrollLeft, 0);
 
 assert.ok(setup({ desktop: false }).section.classes.has('scroll-stories'), 'touch uses vertical-driven motion when panels fit');
 const future = setup({ count: 3, distance: 600 });
@@ -142,10 +150,13 @@ future.next.emit('click'); assert.equal(future.scrolls.at(-1).top, 1300, 'next r
 future.viewport.emit('focusin', { target: { closest: () => future.panels[1] } });
 assert.equal(future.scrolls.at(-1).top, 1000, 'focus can reveal an intermediate future review');
 
-for (const options of [{ reduced: true }, { height: 500 }, { distance: 0 }]) {
+const short = setup({ height: 500 });
+assert.ok(short.section.classes.has('scroll-stories'));
+assert.equal(short.section.style['--stories-top'], '-24px', 'short screens read the card before pinning');
+for (const options of [{ reduced: true }, { distance: 0 }]) {
   const state = setup(options);
   assert.equal(state.section.classes.has('scroll-stories'), false);
-  state.window.emit('scroll'); assert.equal(state.frames.size, 0);
+  state.window.emit('scroll'); assert.equal(state.frames.size, 1); state.flush();
   state.items[4].button.emit('click'); assert.equal(state.items[4].answer.inert, false);
 }
 assert.ok(setup({ observer: false }).section.classes.has('scroll-stories'));
@@ -168,6 +179,8 @@ assert.equal((stories.match(/<aside /g) || []).length, 1, 'Google CTA is not a s
 assert.ok(!stories.includes('libfile_') && !stories.includes('openinapp'));
 assert.equal((stories.match(/href="https:\/\/maps.app.goo.gl\/43SbLYGa6dmvyjkN6" target="_blank" rel="noopener noreferrer"/g) || []).length, 3);
 assert.equal((stories.match(/>View All Reviews <span aria-hidden="true">↗<\/span><\/a>/g) || []).length, 2);
+assert.equal((stories.match(/href="https:\/\/divinetattoo.netlify.app\/" target="_blank" rel="noopener noreferrer"/g) || []).length, 2, 'logo and business name link to the real site');
+assert.match(stories, /<img src="\/assets\/divine-tattoo-logo\.jpg" width="56" height="56" alt="Divine Tattoo"/);
 assert.ok(!html.includes("sb.from('testimonials')"), 'CMS cannot replace or hide the supplied review');
 assert.ok(!html.includes('"@type": "FAQPage"'));
 assert.equal((html.match(/class="faq-trigger"/g) || []).length, 10);

@@ -16,8 +16,9 @@ The security verifier checks executable script syntax, JSON-LD, inline-script
 hashes against both hosting CSPs, package rendering/XSS guards, and pinned SDK
 attributes. The reviews/FAQ suite checks review content, scroll geometry and
 controls, reverse travel, future review panels, FAQ state, ARIA and focus, and
-short-window/reduced-motion fallbacks. Touch viewports use the vertical-driven
-review track when its content fits; taller content remains in normal page flow.
+short-window/reduced-motion behavior. Collapsed reviews use vertical-driven
+motion with a fitting sticky top. Expanded reviews and reduced motion keep the
+same horizontal sequence with native overflow, arrow keys and panel controls.
 
 ## Homepage fluid integration
 
@@ -35,6 +36,15 @@ The root homepage (`/`) loads the red fluid atmosphere directly:
   contacts. Touch Pointer Events are ignored on the homepage to prevent duplication.
 - The effect starts after the existing loader finishes, sleeps in hidden tabs,
   and allocates no graphics on a reduced-motion homepage until that setting changes.
+- The initially empty homepage skips simulation/display passes until genuine input.
+  Its existing frame scheduler, input handling and natural dissipation are retained.
+- Touch devices keep their original quality unless the existing automatic sample
+  detects fewer than 38 FPS after 150 frames. Then only the display DPR cap changes
+  from 1.25 to 1; shaders, simulation/dye grids and live fields are retained without
+  reallocation. Desktop quality behavior is unchanged.
+- Small height-only touch viewport changes reuse the normalized fields within
+  20% of their allocated viewport height. Width/orientation changes and larger
+  resizes use the existing state-preserving reallocation path.
 - Only the homepage imports this atmosphere; About/Services/legal/admin pages do not.
 
 ## Fluid compatibility coverage
@@ -59,6 +69,8 @@ no initial graphics under reduced motion, and non-intercepting homepage markup/s
 Live-field regressions also cover repeated viewport resizing (including mobile
 browser chrome) and the original automatic low-FPS quality threshold. Both must
 retain existing dye while keeping one animation loop; explicit clear still works.
+The suite also checks that idle frames do not redraw an empty field, fast touch
+devices keep quality, and slow touch adaptation preserves the actual field buffers.
 
 The scripts are served from the same origin. The existing CSP and its inline-script
 hashes must remain valid; changes to inline executable scripts require matching
