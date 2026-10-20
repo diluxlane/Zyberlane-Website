@@ -15,7 +15,7 @@ node --check assets/site-pages.js
 The security verifier checks executable script syntax, JSON-LD, inline-script
 hashes against both hosting CSPs, package rendering/XSS guards, and pinned SDK
 attributes. The reviews/FAQ suite checks review content, scroll geometry and
-controls, reverse travel, future review panels, FAQ state, ARIA and focus, and
+controls, right-to-left travel, future review panels, FAQ state, ARIA and focus, and
 short-window/reduced-motion behavior. Collapsed reviews use vertical-driven
 motion with a fitting sticky top. Expanded reviews and reduced motion keep the
 same horizontal sequence with native overflow, arrow keys and panel controls.
