@@ -175,10 +175,10 @@ assert.ok(html.indexOf('<section id="testimonials"') < html.indexOf('<section id
 assert.ok(html.indexOf('<section class="quote-section"') < html.indexOf('<section id="faq"'));
 assert.ok(html.indexOf('<section id="faq"') < html.indexOf('<section id="contact"'));
 assert.equal((stories.match(/<article /g) || []).length, 1, 'only one genuine testimonial');
-assert.equal((stories.match(/<aside /g) || []).length, 1, 'Google CTA is not a second testimonial');
+assert.equal((stories.match(/class="story-panel google-review-panel"/g) || []).length, 1, 'one Google CTA, separate from the genuine testimonial');
+assert.match(stories, /<a class="story-panel google-review-panel"[^>]+>[\s\S]*?<\/a>\s*<\/div>\s*<\/div>\s*<div class="stories-controls">/, 'Google CTA is a complete link and always the final panel');
 assert.ok(!stories.includes('libfile_') && !stories.includes('openinapp'));
 assert.equal((stories.match(/href="https:\/\/maps.app.goo.gl\/43SbLYGa6dmvyjkN6" target="_blank" rel="noopener noreferrer"/g) || []).length, 3);
-assert.equal((stories.match(/>View All Reviews <span aria-hidden="true">↗<\/span><\/a>/g) || []).length, 2);
 assert.equal((stories.match(/href="https:\/\/divinetattoo.netlify.app\/" target="_blank" rel="noopener noreferrer"/g) || []).length, 2, 'logo and business name link to the real site');
 assert.match(stories, /<img src="\/assets\/divine-tattoo-logo\.jpg" width="56" height="56" alt="Divine Tattoo"/);
 assert.ok(!html.includes("sb.from('testimonials')"), 'CMS cannot replace or hide the supplied review');
