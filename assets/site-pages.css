@@ -54,7 +54,8 @@ html{scroll-behavior:smooth;}
       transform-origin:top right;
       transform:scale(.9) translateY(-8px); opacity:0; visibility:hidden; z-index:105;
     }
-    #mainNav.open{transform:scale(1) translateY(0); opacity:1; visibility:visible;}
+    /* Make the opening menu focusable immediately; keep its visual transitions. */
+    #mainNav.open{transform:scale(1) translateY(0); opacity:1; visibility:visible; transition-property:transform, opacity;}
     #mainNav ul{flex-direction:column; gap:2px; width:100%; padding:0;}
     #mainNav ul li{width:100%;}
     #mainNav a{
