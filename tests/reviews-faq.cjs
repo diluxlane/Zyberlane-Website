@@ -173,7 +173,9 @@ assert.deepEqual(paragraphs, [
 assert.ok(html.indexOf('<section id="work"') < html.indexOf('<section id="testimonials"'));
 assert.ok(html.indexOf('<section id="testimonials"') < html.indexOf('<section id="skills"'));
 assert.ok(html.indexOf('<section class="quote-section"') < html.indexOf('<section id="faq"'));
-assert.ok(html.indexOf('<section id="faq"') < html.indexOf('<section id="contact"'));
+assert.ok(html.indexOf('<section id="contact"') < html.indexOf('<section id="booking"'));
+assert.ok(html.indexOf('<section id="booking"') < html.indexOf('<section id="faq"'));
+assert.match(html, /<section id="faq"[\s\S]*?<\/section>\s*<\/main>\s*<footer>/, 'FAQ is the final homepage section before the footer');
 assert.equal((stories.match(/<article /g) || []).length, 1, 'only one genuine testimonial');
 assert.equal((stories.match(/class="story-panel google-review-panel"/g) || []).length, 1, 'one Google CTA, separate from the genuine testimonial');
 assert.match(stories, /<a class="story-panel google-review-panel"[^>]+>[\s\S]*?<\/a>\s*<\/div>\s*<\/div>\s*<div class="stories-controls">/, 'Google CTA is a complete link and always the final panel');
