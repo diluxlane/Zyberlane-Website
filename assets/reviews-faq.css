@@ -14,12 +14,12 @@
 .review-more[open] .review-less{display:inline;}
 .review-more p{margin-top:14px;}
 .story-identity{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;margin-top:24px;padding-top:22px;border-top:1px solid var(--line);}
-.story-client{font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;}
+.story-client{display:block;font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;}
 .story-client-group{display:flex;align-items:center;gap:14px;min-width:0;}
-.story-logo{display:block;flex:0 0 56px;width:56px;height:56px;border-radius:50%;overflow:hidden;}
+.story-logo{display:block;flex:0 0 52px;width:52px;height:52px;border-radius:50%;overflow:hidden;}
 .story-logo:focus-visible{border-radius:50%;}
 /* Crop only the production image's black margin; preserve the complete emblem. */
-.story-logo img{display:block;width:56px;height:56px;object-fit:contain;transform:scale(1.26);}
+.story-logo img{display:block;width:52px;height:52px;object-fit:contain;transform:scale(1.26);}
 .story-business{display:inline-block;margin-top:4px;color:#b7b3b0;font-size:13px;line-height:1.6;}
 .story-business:hover{color:var(--white);}
 .story-source{display:inline-flex;align-items:center;gap:8px;min-height:44px;}
@@ -30,7 +30,7 @@
 .google-review-panel>.google-mark{width:36px;height:36px;margin-bottom:28px;}
 .google-review-panel h3{font-family:'Poppins',sans-serif;font-size:clamp(24px,2.6vw,34px);font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:18px 0 14px;}
 #testimonials .work-all{display:inline-flex;align-items:center;gap:10px;padding:11px 16px;background:var(--panel);color:var(--white);border:1px solid var(--line);border-radius:8px;font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;transition:background .25s var(--ease),border-color .25s var(--ease);}
-#testimonials .work-all:hover{background:var(--red);border-color:var(--red);}
+#testimonials .work-all:hover,#testimonials .google-review-panel:hover .work-all,#testimonials .google-review-panel:focus-visible .work-all{background:var(--red);border-color:var(--red);}
 #testimonials .work-all:active{scale:.97;}
 #testimonials .work-all:focus-visible,.stories-viewport:focus-visible{outline:2px solid var(--red-glow);outline-offset:3px;}
 .stories-controls{display:none;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;}
