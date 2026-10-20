@@ -778,7 +778,7 @@
         <article class="story-panel" aria-label="Divine Tattoo client review">
           <div class="story-rating" role="img" aria-label="Google review: 5 stars">
             <span class="story-stars" aria-hidden="true">★★★★★</span>
-            <span class="story-rating-label" aria-hidden="true">5.0</span>
+            <span class="story-rating-label" aria-hidden="true">5.0 on</span>
             <img class="google-mark" src="/assets/google-g.png" width="22" height="22" alt="" loading="lazy" decoding="async">
           </div>
           <blockquote class="review-copy" cite="https://maps.app.goo.gl/43SbLYGa6dmvyjkN6">
@@ -792,12 +792,12 @@
           </blockquote>
           <div class="story-identity">
             <div class="story-client-group">
-              <a class="story-logo" href="https://divinetattoo.netlify.app/" target="_blank" rel="noopener noreferrer" aria-label="Visit Divine Tattoo website — opens in a new tab">
-                <img src="/assets/divine-tattoo-logo.jpg" width="56" height="56" alt="Divine Tattoo" loading="lazy" decoding="async">
+              <a class="story-logo" href="#work" aria-label="View Divine Tattoo in Selected Work">
+                <img src="/assets/divine-tattoo-logo.jpg" width="52" height="52" alt="Divine Tattoo" loading="lazy" decoding="async">
               </a>
               <div>
-                <div class="story-client">Asanka Mahesh</div>
-                <a class="story-business" href="https://divinetattoo.netlify.app/" target="_blank" rel="noopener noreferrer" aria-label="Visit Divine Tattoo website — opens in a new tab">Divine Tattoo</a>
+                <a class="story-client" href="#work" aria-label="Asanka Mahesh — view Divine Tattoo in Selected Work">Asanka Mahesh</a>
+                <a class="story-business" href="#work" aria-label="View Divine Tattoo in Selected Work">Divine Tattoo</a>
               </div>
             </div>
             <a class="story-source" href="https://maps.app.goo.gl/43SbLYGa6dmvyjkN6" target="_blank" rel="noopener noreferrer" aria-label="Google Review — opens in a new tab">
@@ -809,6 +809,7 @@
         <a class="story-panel google-review-panel" href="https://maps.app.goo.gl/43SbLYGa6dmvyjkN6" target="_blank" rel="noopener noreferrer" aria-label="View all reviews on Google — opens in a new tab">
           <img class="google-mark" src="/assets/google-g.png" width="36" height="36" alt="" loading="lazy" decoding="async">
           <h3 id="googleReviewsTitle">View all reviews<br>on Google</h3>
+          <span class="visit-btn work-all">View all reviews <span aria-hidden="true">↗</span></span>
         </a>
       </div>
     </div>
@@ -1555,6 +1556,12 @@
   }
   previous.addEventListener('click',function(){go(index-1);});
   next.addEventListener('click',function(){go(index+1);});
+  document.querySelectorAll('.story-client-group a[href="#work"]').forEach(function(link){
+    link.addEventListener('click',function(event){
+      // Native hash navigation reveals the first project; reset its local rail too.
+      if(event.button===0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && !active) viewport.scrollLeft=0;
+    });
+  });
   viewport.addEventListener('keydown',function(e){
     if(e.target!==viewport)return;
     if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();go(index+(e.key==='ArrowRight'?1:-1));}
