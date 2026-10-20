@@ -42,9 +42,8 @@
     var progress = active
       ? Math.max(0, Math.min(1, (stickyTop - section.getBoundingClientRect().top) / distance))
       : distance ? viewport.scrollLeft / distance : 0;
-    // Portfolio moves left as progress increases. A reversed flex track keeps
-    // the real review first while these panels move right toward the Google CTA.
-    if (active) track.style.transform = 'translate3d(' + (-(1 - progress) * distance) + 'px,0,0)';
+    // Move left from the real review to the Google CTA as progress increases.
+    if (active) track.style.transform = 'translate3d(' + (-progress * distance) + 'px,0,0)';
     index = Math.round(progress * (panels().length - 1));
     previous.disabled = index === 0;
     next.disabled = index === panels().length - 1;
@@ -102,7 +101,7 @@
     target = Math.max(0, Math.min(list.length - 1, target));
     var behavior = reduced.matches ? 'instant' : 'smooth';
     if (active) {
-      var offset = list[0].offsetLeft - list[target].offsetLeft;
+      var offset = list[target].offsetLeft - list[0].offsetLeft;
       window.scrollTo({ top: window.scrollY + section.getBoundingClientRect().top - stickyTop + offset, behavior: behavior });
     } else {
       viewport.scrollTo({ left: list[target].offsetLeft - list[0].offsetLeft, behavior: behavior });
@@ -114,7 +113,7 @@
     if (event.target !== viewport) return;
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
-      go(index + (event.key === (active ? 'ArrowLeft' : 'ArrowRight') ? 1 : -1));
+      go(index + (event.key === 'ArrowRight' ? 1 : -1));
     }
   });
   viewport.addEventListener('focusin', function (event) {

@@ -43,7 +43,7 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
   const first = new Element(), last = new Element();
   const panels = [first, ...Array.from({ length: count - 2 }, () => new Element()), last];
   panels.forEach((panel, i) => Object.defineProperty(panel, 'offsetLeft', { get: () =>
-    (track.scrollWidth - viewport.clientWidth) * (section.classes.has('scroll-stories') ? 1 - i / (count - 1) : i / (count - 1))
+    (track.scrollWidth - viewport.clientWidth) * i / (count - 1)
   }));
   track.querySelectorAll = () => panels;
   track.firstElementChild = first;
@@ -97,7 +97,7 @@ assert.equal(faq.items[0].button.focused, true, 'closing content does not strand
 const rail = setup();
 assert.ok(rail.section.classes.has('scroll-stories'));
 assert.equal(rail.section.style['--stories-height'], '856px');
-assert.equal(rail.track.style.transform, 'translate3d(-300px,0,0)');
+assert.equal(rail.track.style.transform, 'translate3d(0px,0,0)');
 assert.equal(rail.viewport.getAttribute('tabindex'), '0');
 assert.equal(rail.previous.disabled, true);
 rail.section.top = -60;
@@ -106,19 +106,19 @@ assert.equal(rail.frames.size, 1, 'scroll updates coalesce into one animation fr
 rail.flush();
 assert.equal(rail.track.style.transform, 'translate3d(-150px,0,0)');
 rail.section.top = -1000; rail.window.emit('scroll'); rail.flush();
-assert.equal(rail.track.style.transform, 'translate3d(0px,0,0)');
+assert.equal(rail.track.style.transform, 'translate3d(-300px,0,0)');
 assert.equal(rail.next.disabled, true);
 rail.section.top = 200; rail.window.emit('scroll'); rail.flush();
-assert.equal(rail.track.style.transform, 'translate3d(-300px,0,0)');
+assert.equal(rail.track.style.transform, 'translate3d(0px,0,0)');
 assert.equal(rail.previous.disabled, true);
 assert.equal(rail.window.events.scroll[0].options.passive, true);
 assert.equal(rail.window.events.wheel, undefined);
 assert.equal(rail.viewport.events.touchmove, undefined);
 rail.next.emit('click'); assert.equal(rail.scrolls.at(-1).top, 1410);
 let prevented = false;
-rail.viewport.emit('keydown', { key: 'ArrowLeft', preventDefault: () => { prevented = true; } });
+rail.viewport.emit('keydown', { key: 'ArrowRight', preventDefault: () => { prevented = true; } });
 assert.equal(prevented, true); assert.equal(rail.scrolls.at(-1).top, 1410);
-rail.viewport.emit('keydown', { key: 'ArrowRight', preventDefault() {} });
+rail.viewport.emit('keydown', { key: 'ArrowLeft', preventDefault() {} });
 assert.equal(rail.scrolls.at(-1).top, 1110);
 rail.viewport.emit('keydown', { target: { closest: () => rail.last }, key: 'ArrowRight', preventDefault: () => assert.fail('nested controls keep their keys') });
 rail.viewport.emit('focusin', { target: { closest: () => rail.last } });

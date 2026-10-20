@@ -37,7 +37,7 @@
 #testimonials.scroll-stories{height:var(--stories-height);padding-top:0;padding-bottom:0;}
 .scroll-stories .stories-sticky{position:sticky;top:var(--stories-top,90px);padding:28px 0 24px;}
 .scroll-stories .stories-viewport{overflow:hidden;scroll-snap-type:none;}
-.scroll-stories .stories-track{display:flex;flex-direction:row-reverse;width:max-content;will-change:transform;}
+.scroll-stories .stories-track{display:flex;width:max-content;will-change:transform;}
 .scroll-stories .story-panel{flex:0 0 auto;width:var(--stories-panel-width);}
 .faq-list{max-width:960px;margin-left:auto;}
 .faq-item{border-bottom:1px solid var(--line);}
