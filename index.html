@@ -1533,6 +1533,10 @@
   }
   function schedule(){if(!queued){queued=true;requestAnimationFrame(update);}}
   function measure(){
+    // Keep the scroll range stable while measuring the unpinned track. A
+    // temporary height collapse on resize can make the browser move the page.
+    var previousHeight=section.style.height;
+    section.style.height=section.offsetHeight+'px';
     section.classList.remove('scroll-work');
     track.style.transform=''; viewport.scrollLeft=0;
     distance=Math.max(0,track.scrollWidth-viewport.clientWidth);
@@ -1541,6 +1545,7 @@
       section.classList.add('scroll-work');
       section.style.setProperty('--work-height',(sticky.offsetHeight+distance+56)+'px');
     }else{section.style.removeProperty('--work-height');}
+    section.style.height=previousHeight;
     update();
   }
   function go(target){

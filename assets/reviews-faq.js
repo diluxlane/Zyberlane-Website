@@ -57,6 +57,9 @@
     var oldTop = section.getBoundingClientRect().top;
     var wasPinned = wasActive && oldTop <= stickyTop && oldTop > stickyTop - distance;
     var oldIndex = index;
+    // Keep the scroll range stable while measuring the unpinned track.
+    var previousHeight = section.style.height;
+    section.style.height = section.offsetHeight + 'px';
     active = false;
     section.classList.remove('scroll-stories');
     section.style.removeProperty('--stories-height');
@@ -89,6 +92,7 @@
       var list = panels();
       viewport.scrollLeft = list[Math.min(oldIndex, list.length - 1)].offsetLeft - list[0].offsetLeft;
     }
+    section.style.height = previousHeight;
     // Preserve the reading position when an expanded review leaves the pinned rail.
     if (wasPinned && !active) window.scrollTo({ top: window.scrollY + oldTop - stickyTop, behavior: 'instant' });
     update();
