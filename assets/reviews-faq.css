@@ -5,6 +5,12 @@
 .story-rating{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
 .story-stars{color:var(--red-glow);font-size:22px;letter-spacing:.12em;line-height:1;}
 .story-rating-label,.story-source{font-family:'Space Mono',monospace;font-size:11px;color:#b7b3b0;line-height:1.6;}
+#testimonials .google-rating-link{display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:44px;max-width:100%;color:#b7b3b0;font-family:'Space Mono',monospace;font-size:11px;line-height:1.6;}
+#testimonials .google-rating-link:hover{color:var(--white);}
+#testimonials .google-rating-link:focus-visible{outline:2px solid var(--red-glow);outline-offset:3px;border-radius:4px;}
+#testimonials .google-rating-caption{white-space:nowrap;}
+#testimonials .company-rating-score{color:var(--white);font-size:15px;font-weight:700;}
+#testimonials .company-rating-stars{color:var(--red-glow);font-size:15px;letter-spacing:.05em;line-height:1;}
 .review-copy p{font-size:clamp(16px,1.35vw,19px);line-height:1.75;overflow-wrap:anywhere;}
 .review-more{margin-top:16px;}
 .review-more summary{display:list-item;width:fit-content;max-width:100%;min-height:44px;padding:12px 4px;cursor:pointer;color:var(--white);font-family:'Space Mono',monospace;font-size:11px;}

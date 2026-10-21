@@ -39,11 +39,10 @@
   var reviewToggle = document.getElementById('divineReviewToggle');
   if (reviewToggle) {
     var review = document.getElementById('divineReview');
-    var continuation = document.getElementById('divineReviewContinuation');
     var remainder = document.getElementById('divineReviewRemainder');
     var reviewAnimation = null;
     // Keep the complete review readable when JavaScript is unavailable.
-    continuation.hidden = remainder.hidden = true;
+    remainder.hidden = true;
     reviewToggle.hidden = false;
     reviewToggle.addEventListener('click', function () {
       var from = review.getBoundingClientRect().height;
@@ -51,7 +50,7 @@
       reviewAnimation = null;
       review.style.overflow = '';
       var expanded = reviewToggle.getAttribute('aria-expanded') !== 'true';
-      continuation.hidden = remainder.hidden = !expanded;
+      remainder.hidden = !expanded;
       reviewToggle.setAttribute('aria-expanded', String(expanded));
       reviewToggle.textContent = expanded ? 'Read less' : 'Read more';
       if (!reduced.matches && typeof review.animate === 'function') {

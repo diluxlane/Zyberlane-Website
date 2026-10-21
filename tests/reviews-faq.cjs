@@ -31,7 +31,7 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
   const document = { activeElement: null };
   const section = new Element(), sticky = new Element(), viewport = new Element(), track = new Element();
   const previous = new Element(), next = new Element(), disclosure = new Element(), faq = new Element();
-  const review = new Element(), continuation = new Element(), remainder = new Element();
+  const review = new Element(), remainder = new Element();
   review.getBoundingClientRect = () => ({ height: remainder.hidden ? 100 : 300 });
   if (customReview) {
     disclosure.setAttribute('aria-expanded', 'false');
@@ -49,7 +49,7 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
   document.getElementById = id => ({
     faq, testimonials: section, storiesPrevious: previous, storiesNext: next,
     divineReviewToggle: customReview ? disclosure : undefined,
-    divineReview: review, divineReviewContinuation: continuation, divineReviewRemainder: remainder
+    divineReview: review, divineReviewRemainder: remainder
   })[id];
   const first = new Element(), last = new Element();
   const panels = [first, ...Array.from({ length: count - 2 }, () => new Element()), last];
@@ -81,7 +81,7 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
       const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn());
     }
   }
-  return { window, document, section, sticky, viewport, track, previous, next, disclosure, review, continuation, remainder, faq, items, first, last, panels, desktopMedia, reducedMedia, scrolls, frames, flush, resize };
+  return { window, document, section, sticky, viewport, track, previous, next, disclosure, review, remainder, faq, items, first, last, panels, desktopMedia, reducedMedia, scrolls, frames, flush, resize };
 }
 
 const faq = setup();
@@ -175,18 +175,15 @@ assert.ok(setup({ observer: false }).section.classes.has('scroll-stories'));
 for (const reduced of [false, true]) {
   const inline = setup({ customReview: true, reduced });
   assert.equal(inline.disclosure.hidden, false, 'JavaScript enables the inline review control');
-  assert.equal(inline.continuation.hidden, true);
   assert.equal(inline.remainder.hidden, true);
   inline.disclosure.emit('click'); inline.flush();
   assert.equal(inline.disclosure.getAttribute('aria-expanded'), 'true');
   assert.equal(inline.disclosure.textContent, 'Read less');
-  assert.equal(inline.continuation.hidden, false);
   assert.equal(inline.remainder.hidden, false);
   assert.equal(inline.section.classes.has('scroll-stories'), false, 'expanded review stays in readable page flow');
   inline.disclosure.emit('click'); inline.flush();
   assert.equal(inline.disclosure.getAttribute('aria-expanded'), 'false');
   assert.equal(inline.disclosure.textContent, 'Read more');
-  assert.equal(inline.continuation.hidden, true);
   assert.equal(inline.remainder.hidden, true);
   assert.equal(inline.section.classes.has('scroll-stories'), !reduced);
 }
@@ -200,7 +197,15 @@ assert.deepEqual(paragraphs, [
   'If you’re looking for someone who is talented, reliable, creative, and takes their work seriously, I highly recommend Zyberlane. Excellent work and excellent service! 🔥❤️'
 ], 'the three retained review paragraphs preserve the supplied wording exactly');
 assert.ok(!stories.includes('Definitely 5 Stars!'));
-assert.match(review, /aria-controls="divineReviewContinuation divineReviewRemainder" hidden>Read more<\/button>/, 'inline control progressively enhances the complete, readable review');
+assert.match(review, /perfectly matches my brand\.<\/p>\s*<div class="review-remainder"/, 'preview includes the complete original opening paragraph');
+assert.ok(!review.includes('divineReviewContinuation'), 'the final preview sentence is no longer collapsed');
+assert.match(review, /aria-controls="divineReviewRemainder" hidden>Read more<\/button>/, 'inline control progressively enhances the remaining review');
+const companyRating = stories.match(/<a class="google-rating-link company-google-rating"[^>]*>([\s\S]*?)<\/a>/)[1];
+const cardRating = stories.match(/<a class="google-rating-link story-google-rating"[^>]*>([\s\S]*?)<\/a>/)[1];
+assert.match(companyRating, /google-g\.png[\s\S]*?5\.0[\s\S]*?★★★★★[\s\S]*?on Google[\s\S]*?↗/, 'header company rating is one complete Google link');
+assert.match(cardRating, /google-g\.png[\s\S]*?5\.0 on Google[\s\S]*?↗/, 'card Google logo, score and external arrow share one link');
+assert.match(stories, /class="story-stars" role="img" aria-label="Google review: 5 stars">★★★★★<\/span>/, 'individual review stars remain separately labeled');
+assert.ok(!stories.includes('class="story-source"'), 'duplicate bottom Google Review link is removed');
 assert.ok(html.indexOf('<section id="work"') < html.indexOf('<section id="testimonials"'));
 assert.ok(html.indexOf('<section id="testimonials"') < html.indexOf('<section id="skills"'));
 assert.ok(html.indexOf('<section class="quote-section"') < html.indexOf('<section id="faq"'));
