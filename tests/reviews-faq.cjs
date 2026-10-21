@@ -26,11 +26,18 @@ class Element {
   focus() { this.focused = true; }
   scrollTo(options) { this.scrolls.push(options); this.scrollLeft = options.left; this.emit('scroll'); }
 }
-function setup({ desktop = true, reduced = false, height = 900, observer = true, distance = 300, count = 2 } = {}) {
+function setup({ desktop = true, reduced = false, height = 900, observer = true, distance = 300, count = 2, customReview = false } = {}) {
   const window = new Element();
   const document = { activeElement: null };
   const section = new Element(), sticky = new Element(), viewport = new Element(), track = new Element();
   const previous = new Element(), next = new Element(), disclosure = new Element(), faq = new Element();
+  const review = new Element(), continuation = new Element(), remainder = new Element();
+  review.getBoundingClientRect = () => ({ height: remainder.hidden ? 100 : 300 });
+  if (customReview) {
+    disclosure.setAttribute('aria-expanded', 'false');
+    disclosure.textContent = 'Read more';
+    disclosure.hidden = true;
+  }
   const items = Array.from({ length: 10 }, () => {
     const button = new Element(), answer = new Element();
     const item = { button, answer, querySelector: s => s === '.faq-trigger' ? button : answer };
@@ -39,7 +46,11 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
   faq.querySelectorAll = () => items;
   section.querySelector = s => ({ '.stories-sticky': sticky, '.stories-viewport': viewport, '.stories-track': track, '.review-more': disclosure })[s];
   section.querySelectorAll = () => [disclosure];
-  document.getElementById = id => ({ faq, testimonials: section, storiesPrevious: previous, storiesNext: next })[id];
+  document.getElementById = id => ({
+    faq, testimonials: section, storiesPrevious: previous, storiesNext: next,
+    divineReviewToggle: customReview ? disclosure : undefined,
+    divineReview: review, divineReviewContinuation: continuation, divineReviewRemainder: remainder
+  })[id];
   const first = new Element(), last = new Element();
   const panels = [first, ...Array.from({ length: count - 2 }, () => new Element()), last];
   panels.forEach((panel, i) => Object.defineProperty(panel, 'offsetLeft', { get: () =>
@@ -70,7 +81,7 @@ function setup({ desktop = true, reduced = false, height = 900, observer = true,
       const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn());
     }
   }
-  return { window, document, section, sticky, viewport, track, previous, next, disclosure, faq, items, first, last, panels, desktopMedia, reducedMedia, scrolls, frames, flush, resize };
+  return { window, document, section, sticky, viewport, track, previous, next, disclosure, review, continuation, remainder, faq, items, first, last, panels, desktopMedia, reducedMedia, scrolls, frames, flush, resize };
 }
 
 const faq = setup();
@@ -161,15 +172,35 @@ for (const options of [{ reduced: true }, { distance: 0 }]) {
 }
 assert.ok(setup({ observer: false }).section.classes.has('scroll-stories'));
 
+for (const reduced of [false, true]) {
+  const inline = setup({ customReview: true, reduced });
+  assert.equal(inline.disclosure.hidden, false, 'JavaScript enables the inline review control');
+  assert.equal(inline.continuation.hidden, true);
+  assert.equal(inline.remainder.hidden, true);
+  inline.disclosure.emit('click'); inline.flush();
+  assert.equal(inline.disclosure.getAttribute('aria-expanded'), 'true');
+  assert.equal(inline.disclosure.textContent, 'Read less');
+  assert.equal(inline.continuation.hidden, false);
+  assert.equal(inline.remainder.hidden, false);
+  assert.equal(inline.section.classes.has('scroll-stories'), false, 'expanded review stays in readable page flow');
+  inline.disclosure.emit('click'); inline.flush();
+  assert.equal(inline.disclosure.getAttribute('aria-expanded'), 'false');
+  assert.equal(inline.disclosure.textContent, 'Read more');
+  assert.equal(inline.continuation.hidden, true);
+  assert.equal(inline.remainder.hidden, true);
+  assert.equal(inline.section.classes.has('scroll-stories'), !reduced);
+}
+
 const stories = html.slice(html.indexOf('<section id="testimonials"'), html.indexOf('<!-- ================= SKILLS'));
 const review = stories.match(/<blockquote\b[^>]*>([\s\S]*?)<\/blockquote>/)[1];
-const paragraphs = [...review.matchAll(/<p>([\s\S]*?)<\/p>/g)].map(m => m[1]);
+const paragraphs = [...review.matchAll(/<p>([\s\S]*?)<\/p>/g)].map(m => m[1].replace(/<[^>]*>/g, ''));
 assert.deepEqual(paragraphs, [
   'I had a great experience working with Zyberlane. He created an absolutely amazing website for my business, and I’m genuinely impressed with the final result. The design is modern, professional, clean, and perfectly matches my brand.',
   'What I really appreciated was his excellent communication, patience, attention to detail, and willingness to understand exactly what I needed. He didn’t just make a website — he turned my idea into something much better than I expected.',
-  'If you’re looking for someone who is talented, reliable, creative, and takes their work seriously, I highly recommend Zyberlane. Excellent work and excellent service! 🔥❤️',
-  'Definitely 5 Stars! ⭐⭐⭐⭐⭐'
-], 'all four review paragraphs retain the supplied wording');
+  'If you’re looking for someone who is talented, reliable, creative, and takes their work seriously, I highly recommend Zyberlane. Excellent work and excellent service! 🔥❤️'
+], 'the three retained review paragraphs preserve the supplied wording exactly');
+assert.ok(!stories.includes('Definitely 5 Stars!'));
+assert.match(review, /aria-controls="divineReviewContinuation divineReviewRemainder" hidden>Read more<\/button>/, 'inline control progressively enhances the complete, readable review');
 assert.ok(html.indexOf('<section id="work"') < html.indexOf('<section id="testimonials"'));
 assert.ok(html.indexOf('<section id="testimonials"') < html.indexOf('<section id="skills"'));
 assert.ok(html.indexOf('<section class="quote-section"') < html.indexOf('<section id="faq"'));
