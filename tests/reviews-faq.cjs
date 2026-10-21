@@ -203,7 +203,8 @@ assert.match(review, /aria-controls="divineReviewRemainder" hidden>Read more<\/b
 const companyRating = stories.match(/<a class="google-rating-link company-google-rating"[^>]*>([\s\S]*?)<\/a>/)[1];
 const cardRating = stories.match(/<a class="google-rating-link story-google-rating"[^>]*>([\s\S]*?)<\/a>/)[1];
 assert.match(companyRating, /google-g\.png[\s\S]*?5\.0[\s\S]*?★★★★★[\s\S]*?on Google[\s\S]*?↗/, 'header company rating is one complete Google link');
-assert.match(cardRating, /google-g\.png[\s\S]*?5\.0 on Google[\s\S]*?↗/, 'card Google logo, score and external arrow share one link');
+assert.match(cardRating, /google-g\.png/, 'individual Google review keeps its source logo');
+assert.ok(!/5\.0|on Google|↗/.test(cardRating), 'individual Google review omits the company score and external arrow');
 assert.match(stories, /class="story-stars" role="img" aria-label="Google review: 5 stars">★★★★★<\/span>/, 'individual review stars remain separately labeled');
 assert.ok(!stories.includes('class="story-source"'), 'duplicate bottom Google Review link is removed');
 assert.ok(html.indexOf('<section id="work"') < html.indexOf('<section id="testimonials"'));
