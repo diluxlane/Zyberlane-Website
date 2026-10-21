@@ -387,7 +387,7 @@
   .p-step p{color:var(--gray); font-size:14px; line-height:1.7; max-width:480px;}
 
   /* ---------- QUOTE ---------- */
-  .quote-section{background:linear-gradient(135deg,var(--red-deep),var(--black-2) 65%); padding:110px 5vw;}
+  .quote-section{z-index:4; background:linear-gradient(135deg,var(--red-deep),var(--black-2) 65%); padding:110px 5vw;}
   .quote-inner{max-width:720px; margin:0 auto; text-align:center;}
   .quote-mark{font-family:'Anton'; font-size:64px; color:var(--red-glow); line-height:.6; opacity:.7;}
   .quote-inner p{font-family:'Poppins'; font-weight:600; font-size:clamp(20px,3vw,30px); line-height:1.5; margin:18px 0 26px;}
@@ -523,7 +523,7 @@
   .work-arrow:disabled{opacity:.35; cursor:default; background:var(--panel); border-color:var(--line);}
   .work-arrow:focus-visible, #work .work-all:focus-visible, .work-viewport:focus-visible{outline:2px solid var(--red-glow); outline-offset:3px;}
   #work.scroll-work{height:var(--work-height); padding-top:0; padding-bottom:0;}
-  .scroll-work .work-sticky{position:sticky; top:90px; padding:28px 0 24px;}
+  .scroll-work .work-sticky{position:sticky; top:90px; z-index:4; padding:28px 0 24px;}
   .scroll-work .work-viewport{overflow:hidden; scroll-snap-type:none;}
   .scroll-work .work-track{will-change:transform;}
   .portfolio-dialog{
@@ -578,6 +578,7 @@
 
   /* Two featured projects, then a final gallery invitation. */
   .work-track > .work-end{display:flex; align-items:center; justify-content:center; text-align:center; padding:32px 24px;}
+  .scroll-work .work-track > .work-end{background:transparent;}
   .work-end h3{font-size:clamp(22px,3vw,34px); margin:16px 0;}
   [data-slug="divine-tattoo"] .thumb-frame img{object-fit:cover; object-position:top center; background:var(--black-2);}
   @media(max-height:640px){
