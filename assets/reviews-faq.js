@@ -33,8 +33,48 @@
   var track = section.querySelector('.stories-track');
   var previous = document.getElementById('storiesPrevious');
   var next = document.getElementById('storiesNext');
-  var disclosures = Array.from(section.querySelectorAll('.review-more'));
+  var disclosures = Array.from(section.querySelectorAll('.review-more, #divineReviewToggle'));
   var active = false, distance = 0, index = 0, frame = 0, measureFrame = 0, stickyTop = 90;
+
+  var reviewToggle = document.getElementById('divineReviewToggle');
+  if (reviewToggle) {
+    var review = document.getElementById('divineReview');
+    var continuation = document.getElementById('divineReviewContinuation');
+    var remainder = document.getElementById('divineReviewRemainder');
+    var reviewAnimation = null;
+    // Keep the complete review readable when JavaScript is unavailable.
+    continuation.hidden = remainder.hidden = true;
+    reviewToggle.hidden = false;
+    reviewToggle.addEventListener('click', function () {
+      var from = review.getBoundingClientRect().height;
+      if (reviewAnimation) reviewAnimation.cancel();
+      reviewAnimation = null;
+      review.style.overflow = '';
+      var expanded = reviewToggle.getAttribute('aria-expanded') !== 'true';
+      continuation.hidden = remainder.hidden = !expanded;
+      reviewToggle.setAttribute('aria-expanded', String(expanded));
+      reviewToggle.textContent = expanded ? 'Read less' : 'Read more';
+      if (!reduced.matches && typeof review.animate === 'function') {
+        var animation = review.animate([
+          { height: from + 'px' },
+          { height: review.getBoundingClientRect().height + 'px' }
+        ], { duration: 280, easing: 'cubic-bezier(.16,.8,.24,1)' });
+        reviewAnimation = animation;
+        review.style.overflow = 'hidden';
+        function finishReviewAnimation() {
+          if (reviewAnimation !== animation) return;
+          reviewAnimation = null;
+          review.style.overflow = '';
+          scheduleMeasure();
+        }
+        animation.finished.then(finishReviewAnimation, finishReviewAnimation);
+      }
+      scheduleMeasure();
+    });
+    reduced.addEventListener('change', function () {
+      if (reduced.matches && reviewAnimation) reviewAnimation.finish();
+    });
+  }
   function panels() { return Array.from(track.querySelectorAll('.story-panel')); }
 
   function update() {
@@ -69,7 +109,7 @@
     viewport.scrollLeft = 0;
     viewport.setAttribute('tabindex', '0');
     // Reading the complete review uses normal page flow, including short windows.
-    if (!reduced.matches && !disclosures.some(function (disclosure) { return disclosure.open; })) {
+    if (!reduced.matches && !disclosures.some(function (disclosure) { return disclosure.open || disclosure.getAttribute('aria-expanded') === 'true'; })) {
       track.style.setProperty('--stories-panel-width', viewport.clientWidth + 'px');
       section.classList.add('scroll-stories');
       distance = Math.max(0, track.scrollWidth - viewport.clientWidth);
