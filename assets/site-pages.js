@@ -72,40 +72,22 @@
 
   // Match the homepage's 28px, 800ms reveal and 100ms stagger.
   if (document.body.classList.contains('company-page')) {
-    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    var activeMotion = new Set();
     var intro = Array.from(document.querySelectorAll('.page-intro .eyebrow, .page-intro h1, .page-intro .page-description, .page-intro .legal-date'));
     var elements = new Set(document.querySelectorAll('[data-page-reveal], .section-head'));
     intro.forEach(function(element, index) {
-      element.setAttribute('data-page-delay', String(index * 100));
+      element.style.transitionDelay = (index * 100) + 'ms';
       elements.add(element);
     });
-    if ('IntersectionObserver' in window) {
-      var observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-          if (!entry.isIntersecting) return;
-          observer.unobserve(entry.target);
-          if (reducedMotion.matches || typeof entry.target.animate !== 'function') return;
-          var animation = entry.target.animate([
-            { opacity: 0, transform: 'translateY(28px)' },
-            { opacity: 1, transform: 'translateY(0)' }
-          ], {
-            duration: 800,
-            delay: Number(entry.target.getAttribute('data-page-delay') || 0),
-            easing: 'cubic-bezier(.16,.8,.24,1)',
-            fill: 'backwards'
-          });
-          activeMotion.add(animation);
-          animation.finished.then(function() { activeMotion.delete(animation); }, function() { activeMotion.delete(animation); });
-        });
-      }, { threshold: 0.15 });
-      elements.forEach(function(element) { observer.observe(element); });
-    }
-    reducedMotion.addEventListener('change', function() {
-      if (reducedMotion.matches) {
-        activeMotion.forEach(function(animation) { animation.cancel(); });
-        activeMotion.clear();
-      }
+    var observer = 'IntersectionObserver' in window ? new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('in');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.15 }) : null;
+    elements.forEach(function(element) {
+      if (observer) observer.observe(element);
+      else element.classList.add('in');
     });
   }
   /* ================= ADDITIVE: CUSTOM CURSOR ================= */
