@@ -3,6 +3,15 @@
   'use strict';
   var work=document.getElementById('work');
   if(!work)return;
+  // Match the reference's surface through screen-blended fluid. Only these two
+  // invitations sit above that fluid; retain their existing wrapper layering.
+  var reference=work.querySelector('[data-work-category="concept-projects"] .work-end');
+  var surface=getComputedStyle(reference).backgroundColor.match(/[\d.]+/g).map(Number);
+  var base=getComputedStyle(document.body).backgroundColor.match(/[\d.]+/g).map(Number);
+  var alpha=(surface[0]-base[0])/(255-base[0])*(surface.length===4?surface[3]:1);
+  work.querySelectorAll('#workEndPanel,#design-studiesEndPanel').forEach(function(card){
+    card.style.setProperty('--work-end-surface','rgba(255,255,255,'+alpha+')');
+  });
   var dialog=document.getElementById('portfolioDialog');
   var gallery=document.getElementById('portfolioGallery');
   var opener=document.getElementById('openPortfolio');
