@@ -11,6 +11,7 @@
 node_modules/
 playwright-report/
 test-results/
+dist/
 
 # Local OS metadata and logs
 .DS_Store

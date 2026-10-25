@@ -1,4 +1,11 @@
 {
+  "buildCommand": "node scripts/build.cjs",
+  "outputDirectory": "dist",
+  "trailingSlash": true,
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+    { "source": "/:page/index.html", "destination": "/:page/", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/(.*)",

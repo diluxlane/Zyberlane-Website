@@ -3,6 +3,8 @@
 Run these dependency-free checks from the repository root:
 
 ```sh
+node scripts/build.cjs
+node tests/technical-seo.cjs
 node security/verify.cjs
 node tests/reviews-faq.cjs
 node tests/fluid-compatibility.cjs
@@ -11,6 +13,12 @@ node --check assets/fluid-cpu.js
 node --check assets/reviews-faq.js
 node --check assets/site-pages.js
 ```
+
+Technical SEO packaging, sitemap/canonical checks and deployment verification are
+documented in [`docs/technical-seo.md`](../docs/technical-seo.md). With development-only
+Playwright and Chromium installed, `node tests/technical-seo-browser.cjs` checks all
+five built public pages at desktop/mobile sizes with JavaScript enabled and disabled.
+It uses the same `PORTFOLIO_BROWSER` executable override as the portfolio suite.
 
 The security verifier checks executable script syntax, JSON-LD, inline-script
 hashes against both hosting CSPs, package rendering/XSS guards, and pinned SDK
