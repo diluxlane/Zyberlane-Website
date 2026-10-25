@@ -1,0 +1,279 @@
+{
+  "source": "https://schema.org/version/latest/schemaorg-current-https.jsonld",
+  "retrieved": "2026-10-25",
+  "source_sha256": "0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74",
+  "classes": {
+    "AboutPage": [
+      "WebPage"
+    ],
+    "WebPage": [
+      "CreativeWork"
+    ],
+    "CreativeWork": [
+      "Thing"
+    ],
+    "Thing": [],
+    "BreadcrumbList": [
+      "ItemList"
+    ],
+    "ItemList": [
+      "Intangible"
+    ],
+    "Intangible": [
+      "Thing"
+    ],
+    "CollectionPage": [
+      "WebPage"
+    ],
+    "ContactPoint": [
+      "StructuredValue"
+    ],
+    "StructuredValue": [
+      "Intangible"
+    ],
+    "ImageObject": [
+      "MediaObject"
+    ],
+    "MediaObject": [
+      "CreativeWork"
+    ],
+    "ListItem": [
+      "Intangible"
+    ],
+    "Organization": [
+      "Thing"
+    ],
+    "Person": [
+      "Thing"
+    ],
+    "Service": [
+      "Intangible"
+    ],
+    "WebSite": [
+      "CreativeWork"
+    ]
+  },
+  "properties": {
+    "about": {
+      "domain": [
+        "Certification",
+        "CommunicateAction",
+        "CreativeWork",
+        "DefinedTerm",
+        "DefinedTermSet",
+        "Event"
+      ],
+      "range": [
+        "Thing"
+      ]
+    },
+    "affiliation": {
+      "domain": [
+        "Person"
+      ],
+      "range": [
+        "Organization"
+      ]
+    },
+    "alternateName": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "breadcrumb": {
+      "domain": [
+        "WebPage"
+      ],
+      "range": [
+        "BreadcrumbList",
+        "Text"
+      ]
+    },
+    "contactPoint": {
+      "domain": [
+        "HealthInsurancePlan",
+        "Organization",
+        "Person"
+      ],
+      "range": [
+        "ContactPoint"
+      ]
+    },
+    "contactType": {
+      "domain": [
+        "ContactPoint"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "contentUrl": {
+      "domain": [
+        "MediaObject"
+      ],
+      "range": [
+        "URL"
+      ]
+    },
+    "description": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "Text",
+        "TextObject"
+      ]
+    },
+    "email": {
+      "domain": [
+        "ContactPoint",
+        "Organization",
+        "Person"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "founder": {
+      "domain": [
+        "Organization"
+      ],
+      "range": [
+        "Organization",
+        "Person"
+      ]
+    },
+    "isPartOf": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "CreativeWork",
+        "URL"
+      ]
+    },
+    "item": {
+      "domain": [
+        "DataFeedItem",
+        "ListItem"
+      ],
+      "range": [
+        "Thing"
+      ]
+    },
+    "itemListElement": {
+      "domain": [
+        "ItemList"
+      ],
+      "range": [
+        "ListItem",
+        "Text",
+        "Thing"
+      ]
+    },
+    "logo": {
+      "domain": [
+        "Brand",
+        "Certification",
+        "Organization",
+        "Place",
+        "Product",
+        "Service"
+      ],
+      "range": [
+        "ImageObject",
+        "URL"
+      ]
+    },
+    "mainEntity": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Thing"
+      ]
+    },
+    "mainEntityOfPage": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "CreativeWork",
+        "URL"
+      ]
+    },
+    "mentions": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Thing"
+      ]
+    },
+    "name": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "Text"
+      ]
+    },
+    "position": {
+      "domain": [
+        "CreativeWork",
+        "ListItem"
+      ],
+      "range": [
+        "Integer",
+        "Text"
+      ]
+    },
+    "provider": {
+      "domain": [
+        "Action",
+        "CreativeWork",
+        "EducationalOccupationalProgram",
+        "FinancialIncentive",
+        "Invoice",
+        "OfferShippingDetails",
+        "ParcelDelivery",
+        "Reservation",
+        "Service",
+        "Trip"
+      ],
+      "range": [
+        "Organization",
+        "Person"
+      ]
+    },
+    "publisher": {
+      "domain": [
+        "CreativeWork",
+        "FinancialIncentive"
+      ],
+      "range": [
+        "Organization",
+        "Person"
+      ]
+    },
+    "sameAs": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "URL"
+      ]
+    },
+    "url": {
+      "domain": [
+        "Thing"
+      ],
+      "range": [
+        "URL"
+      ]
+    }
+  }
+}

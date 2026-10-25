@@ -3,7 +3,7 @@
 // Static-site packaging only: no templating, CMS requests or HTML rewrites.
 const fs = require('node:fs');
 const path = require('node:path');
-const ORIGIN = 'https://zyberlane.com';
+const { ORIGIN, checkStructuredData } = require('./structured-data.cjs');
 const INTERNAL = new Set(['assets', 'dist', 'docs', 'security', 'tests', 'scripts', 'node_modules']);
 const ROOT_PUBLIC = /\.(?:html|txt|xml|ico|png|webmanifest)$/i;
 
@@ -37,6 +37,7 @@ function build(root = path.resolve(__dirname, '..')) {
   const pages = [];
   const htmlFiles = [];
   const publicFiles = [];
+  const pageSources = [];
 
   function discover(directory, relative = '') {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -46,8 +47,9 @@ function build(root = path.resolve(__dirname, '..')) {
         if (!INTERNAL.has(entry.name)) discover(path.join(directory, entry.name), file);
       } else if (entry.isFile() && file.endsWith('.html')) {
         htmlFiles.push(file);
-        const canonical = pageInfo(file, fs.readFileSync(path.join(root, file), 'utf8'));
-        if (canonical) pages.push(canonical);
+        const html = fs.readFileSync(path.join(root, file), 'utf8');
+        const canonical = pageInfo(file, html);
+        if (canonical) { pages.push(canonical); pageSources.push({ file, html }); }
         publicFiles.push(file);
       } else if (!relative && ROOT_PUBLIC.test(file) && file !== 'sitemap.xml') {
         publicFiles.push(file);
@@ -58,6 +60,7 @@ function build(root = path.resolve(__dirname, '..')) {
   pages.sort((a, b) => a === ORIGIN + '/' ? -1 : b === ORIGIN + '/' ? 1 : a.localeCompare(b));
   if (!pages.includes(ORIGIN + '/')) throw new Error('Missing canonical homepage');
   if (new Set(pages).size !== pages.length) throw new Error('Duplicate sitemap canonical');
+  checkStructuredData(root, pageSources);
 
   // No invented lastmod: add dates only when a reliable content-modification source exists.
   const sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n' +

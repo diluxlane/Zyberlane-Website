@@ -12,6 +12,11 @@ Run `node scripts/build.cjs` to produce `dist/`. Netlify uses `netlify.toml` to 
 this command and publish that directory. The existing Vercel configuration builds
 the same static files. Neither configuration creates a new deployment project.
 
+Development pushes are reviewed on the existing Vercel preview workflow. Netlify
+publication is a separate owner-approved action, deferred across optimization
+phases to conserve credits. Phase 2 adds a stale-JSON-LD check before packaging;
+HTML is still copied verbatim after validation. See `docs/entity-seo.md`.
+
 The build copies HTML verbatim, the public `assets/` directory, root public
 HTML/text/XML/icon files, and Netlify's `_headers`. Internal `docs/`, `security/`,
 `scripts/`, `tests/`, hidden files, symbolic links and package/deployment state are

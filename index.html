@@ -35,27 +35,62 @@
 <link rel="apple-touch-icon" href="/assets/favicon.png">
 
 <!-- Structured data for search engines -->
-<script type="application/ld+json">
+<script type="application/ld+json" id="zyberlane-structured-data">
 {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Zyberlane",
-  "url": "https://zyberlane.com/",
-  "logo": "https://zyberlane.com/assets/favicon.png",
-  "description": "Zyberlane is a technology company focused on software, web development, AI and automation.",
-  "email": "contact@zyberlane.com",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Badulla",
-    "addressRegion": "Uva Province",
-    "addressCountry": "LK"
-  },
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "email": "contact@zyberlane.com",
-    "contactType": "customer service",
-    "areaServed": "Worldwide"
-  }
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://zyberlane.com/#organization",
+      "name": "Zyberlane",
+      "url": "https://zyberlane.com/",
+      "description": "Zyberlane builds software, websites, AI systems and automation with a practical project scope. Based in Sri Lanka, working remotely with businesses and creators.",
+      "logo": {
+        "@id": "https://zyberlane.com/#logo"
+      },
+      "founder": {
+        "@id": "https://zyberlane.com/#founder"
+      },
+      "sameAs": [
+        "https://github.com/Zyberlane",
+        "https://maps.app.goo.gl/43SbLYGa6dmvyjkN6"
+      ],
+      "email": "contact@zyberlane.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "project inquiries",
+        "email": "contact@zyberlane.com",
+        "url": "https://zyberlane.com/#contact"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://zyberlane.com/#website",
+      "name": "Zyberlane",
+      "url": "https://zyberlane.com/",
+      "publisher": {
+        "@id": "https://zyberlane.com/#organization"
+      }
+    },
+    {
+      "@type": "ImageObject",
+      "@id": "https://zyberlane.com/#logo",
+      "contentUrl": "https://zyberlane.com/assets/favicon.png"
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://zyberlane.com/#webpage",
+      "url": "https://zyberlane.com/",
+      "name": "Zyberlane | Software, Web, AI & Automation | Sri Lanka",
+      "description": "Zyberlane builds software, websites, AI systems and automation with a practical project scope. Based in Sri Lanka, working remotely with businesses and creators.",
+      "isPartOf": {
+        "@id": "https://zyberlane.com/#website"
+      },
+      "about": {
+        "@id": "https://zyberlane.com/#organization"
+      }
+    }
+  ]
 }
 </script>
 
