@@ -10,6 +10,8 @@ const { output, pages } = build(root);
 const origin = 'https://zyberlane.com';
 const routes = ['/', '/about/', '/services/', '/services/web-development/', '/services/web-app-development/', '/services/ai-automation/', '/privacy-policy/', '/terms/'];
 const detailRoutes = routes.filter(route => route.startsWith('/services/') && route !== '/services/');
+const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
+assert.ok(vercel.redirects.some(rule => rule.source === '/services/:service/index.html' && rule.destination === '/services/:service/' && rule.permanent === true), 'Nested service index.html variants need permanent same-host redirects');
 assert.deepEqual(pages.slice().sort(), routes.map(route => origin + route).sort(), 'Unplanned public landing pages or a missing destination');
 const decode = value => value.replace(/&amp;/g, '&').replace(/&#x27;|&#39;|&apos;/g, "'").replace(/&quot;/g, '"');
 const text = html => decode(html.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();

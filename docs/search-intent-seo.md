@@ -155,6 +155,24 @@ jobs/courses, enterprise staffing, unsupported ML research, or every AI phrase.
 Normal, Open Graph and Twitter text agree; the generated WebPage entities follow
 the same metadata. Privacy/Terms metadata and the OG image remain unchanged.
 
+### Live CMS metadata correction
+
+The first Phase 3 preview exposed a real rendered-head conflict: the existing CMS
+loaded Phase 1/2 default `seo_title` and `seo_description` after page load, restoring
+old text while social tags and JSON-LD retained the new source values. Extend the
+existing legacy-default upgrade mechanism to recognize those exact prior defaults.
+Intentional custom CMS SEO/hero edits still work; no shared database values change.
+Custom title/description edits now synchronize normal, Open Graph, Twitter and
+homepage WebPage/Organization descriptions. IDs, URLs and relationships stay static.
+The one changed inline-script hash is updated in both existing hosting CSPs; their
+security directives are retained. `tests/cms-seo.cjs` covers both legacy versions,
+custom edits, missing/blank fields, unchanged identities and safe text serialization.
+
+The preview also served a new nested `/services/.../index.html` URL without the
+directory redirect used by existing pages. Add one same-host permanent redirect
+pattern for service children. Netlify's Phase 1 generated redirects already include
+the new files. Previews remain on their own hostname for navigation/testing.
+
 ## Official guidance used
 
 - [Google people-first content](https://developers.google.com/search/docs/fundamentals/creating-helpful-content):

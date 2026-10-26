@@ -7,6 +7,7 @@ node scripts/build.cjs
 node tests/technical-seo.cjs
 node tests/entity-seo.cjs
 node tests/search-intent-seo.cjs
+node tests/cms-seo.cjs
 node security/verify.cjs
 node tests/reviews-faq.cjs
 node tests/fluid-compatibility.cjs
@@ -32,6 +33,8 @@ Phase 3 intent research and page ownership are recorded in
 verifies the eight intended destinations, synchronized metadata, heading hierarchy,
 unchanged service identities, detail-page links/breadcrumbs and quotation-based
 positioning. Removing a selected service destination must fail validation.
+The CMS SEO check covers stale default upgrades, intentional edits, synchronized
+rendered metadata/JSON-LD, identity preservation and safe text serialization.
 
 The security verifier checks executable script syntax, JSON-LD, inline-script
 hashes against both hosting CSPs, package rendering/XSS guards, and pinned SDK

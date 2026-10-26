@@ -1343,14 +1343,46 @@
     requestAnimationFrame(step);
   }
 
+  // Keep an intentional CMS SEO edit consistent across the rendered head/graph.
+  // Page/entity URLs and relationships always remain owned by the static build.
+  function applySeoMetadata(map){
+    var title = typeof map.seo_title === 'string' ? map.seo_title.trim() : '';
+    var description = typeof map.seo_description === 'string' ? map.seo_description.trim() : '';
+    if (!title && !description) return;
+    if (title) document.title = title;
+    [
+      ['meta[name="description"]', description],
+      ['meta[property="og:title"]', title],
+      ['meta[name="twitter:title"]', title],
+      ['meta[property="og:description"]', description],
+      ['meta[name="twitter:description"]', description]
+    ].forEach(function(entry){
+      var element = document.querySelector(entry[0]);
+      if (element && entry[1]) element.setAttribute('content', entry[1]);
+    });
+    var block = document.getElementById('zyberlane-structured-data');
+    if (!block) return;
+    try {
+      var data = JSON.parse(block.textContent);
+      data['@graph'].forEach(function(node){
+        if (node['@id'] === 'https://zyberlane.com/#webpage'){
+          if (title) node.name = title;
+          if (description) node.description = description;
+        }
+        if (node['@id'] === 'https://zyberlane.com/#organization' && description) node.description = description;
+      });
+      block.textContent = JSON.stringify(data).replace(/</g, '\\u003c');
+    } catch (e) { /* Keep the existing graph if a separately edited block is invalid. */ }
+  }
+
   function applySiteSettings(rows){
     // Upgrade only the previous default copy without writing to the shared CMS.
     // Any custom text entered through admin continues to take precedence.
     var legacyDefaults = {
       hero_role: 'Software Company & AI Vibe Coding',
       hero_description: 'We design and build software and websites by pairing human direction with AI vibe coding — turning ideas into working products fast, without cutting corners on craft.',
-      seo_title: 'Zyberlane — Software Company & AI Vibe Coding | Sri Lanka',
-      seo_description: 'Zyberlane builds websites and software with AI vibe coding and prompt engineering. Based in Sri Lanka, open for new client projects.'
+      seo_title: ['Zyberlane — Software Company & AI Vibe Coding | Sri Lanka', 'Zyberlane | Software, Web, AI & Automation | Sri Lanka'],
+      seo_description: ['Zyberlane builds websites and software with AI vibe coding and prompt engineering. Based in Sri Lanka, open for new client projects.', 'Zyberlane builds software, websites, AI systems and automation with a practical project scope. Based in Sri Lanka, working remotely with businesses and creators.']
     };
     var defaults = {
       hero_role: document.querySelector('[data-cms="hero_role"]').textContent.trim(),
@@ -1361,7 +1393,7 @@
     var map = {};
     rows.forEach(function(r){
       var isLegacy = Object.prototype.hasOwnProperty.call(legacyDefaults, r.key) &&
-        typeof r.value === 'string' && r.value.replace(/\s+/g, ' ').trim() === legacyDefaults[r.key];
+        typeof r.value === 'string' && [].concat(legacyDefaults[r.key]).indexOf(r.value.replace(/\s+/g, ' ').trim()) > -1;
       map[r.key] = isLegacy ? defaults[r.key] : r.value;
     });
 
@@ -1397,13 +1429,8 @@
     if (map.social_tiktok){ var st = document.getElementById('socialTiktok'); if (st){ var safeTt = safeUrl(map.social_tiktok); if (safeTt) { st.href = safeTt; st.removeAttribute('aria-disabled'); st.removeAttribute('title'); st.setAttribute('aria-label', 'TikTok'); } } }
     if (map.social_github){ var sg = document.getElementById('socialGithub'); if (sg){ var safeGh = safeUrl(map.social_github); if (safeGh) sg.href = safeGh; } }
 
-    // SEO — helps JS-rendering crawlers (e.g. Googlebot); raw HTML tags remain
-    // the source of truth for non-JS crawlers and social-preview bots.
-    if (map.seo_title) document.title = map.seo_title;
-    if (map.seo_description){
-      var metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute('content', map.seo_description);
-    }
+    // Raw HTML remains the source for crawlers that do not execute JavaScript.
+    applySeoMetadata(map);
   }
 
   // ---------- services (Core Expertise) ----------
