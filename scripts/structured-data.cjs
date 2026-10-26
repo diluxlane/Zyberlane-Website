@@ -15,6 +15,14 @@ const SERVICE_IDS = Object.freeze({
   'Business Automation & Integrations': 'business-automation-integrations',
   'SEO & Web Optimization': 'seo-web-optimization'
 });
+// A small set of independent buyer intents; retain the original entity IDs.
+// Services without a detail page stay on the overview, never on a guessed URL.
+const SERVICE_PAGES = Object.freeze({
+  'web-development': '/services/web-development/',
+  'software-development': '/services/web-app-development/',
+  'ai-agents-automation': '/services/ai-automation/',
+  'business-automation-integrations': '/services/ai-automation/'
+});
 const MANAGED = /<script\b(?=[^>]*\bid="zyberlane-structured-data")(?=[^>]*\btype="application\/ld\+json")[^>]*>[\s\S]*?<\/script>/g;
 const EXCLUDED = new Set(['assets', 'dist', 'docs', 'security', 'tests', 'scripts', 'node_modules']);
 const ref = id => ({ '@id': id });
@@ -66,8 +74,10 @@ function graphs(root, sources) {
     const name = text(match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i)?.[1] || '');
     const description = text(match[2].match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1] || '');
     if (!SERVICE_IDS[name] || !description) throw new Error('Assign a verified, persistent identity to the visible service: ' + name);
+    const destination = ORIGIN + (SERVICE_PAGES[SERVICE_IDS[name]] || '/services/');
+    if (!pages.some(page => page.url === destination)) throw new Error('Missing canonical service destination: ' + destination);
     return { '@type': 'Service', '@id': ORIGIN + '/#service-' + SERVICE_IDS[name], name, description,
-      url: services.url, provider: ref(IDS.organization), mainEntityOfPage: ref(services.url + '#webpage') };
+      url: destination, provider: ref(IDS.organization), mainEntityOfPage: ref(destination + '#webpage') };
   });
   if (!serviceNodes.length || new Set(serviceNodes.map(node => node['@id'])).size !== serviceNodes.length) throw new Error('Missing/duplicate service identities');
 
@@ -86,10 +96,11 @@ function graphs(root, sources) {
       );
     } else {
       node.breadcrumb = ref(page.url + '#breadcrumb');
-      graph.push({ '@type': 'BreadcrumbList', '@id': page.url + '#breadcrumb', itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: home.url },
-        { '@type': 'ListItem', position: 2, name: page.label, item: page.url }
-      ] });
+      const trail = [{ name: 'Home', item: home.url }];
+      if (page !== services && new URL(page.url).pathname.startsWith('/services/')) trail.push({ name: services.label, item: services.url });
+      trail.push({ name: page.label, item: page.url });
+      graph.push({ '@type': 'BreadcrumbList', '@id': page.url + '#breadcrumb', itemListElement:
+        trail.map((item, index) => ({ '@type': 'ListItem', position: index + 1, ...item })) });
     }
     if (page === about) {
       node.mainEntity = ref(IDS.organization);
@@ -99,6 +110,9 @@ function graphs(root, sources) {
     if (page === services) {
       node.mainEntity = serviceNodes.map(service => ref(service['@id']));
       graph.push(...serviceNodes);
+    } else {
+      const primaryServices = serviceNodes.filter(service => service.url === page.url);
+      if (primaryServices.length) node.mainEntity = primaryServices.map(service => ref(service['@id']));
     }
     return { ...page, graph: { '@context': 'https://schema.org', '@graph': graph } };
   });
@@ -139,4 +153,4 @@ if (require.main === module) {
     console.log('PASS: source JSON-LD matches public metadata, founder facts, linked profiles and visible service content.');
   }
 }
-module.exports = { ORIGIN, IDS, PROFILES, SERVICE_IDS, prepare, checkStructuredData, findSources, serialize };
+module.exports = { ORIGIN, IDS, PROFILES, SERVICE_IDS, SERVICE_PAGES, prepare, checkStructuredData, findSources, serialize };

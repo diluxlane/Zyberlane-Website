@@ -2,7 +2,9 @@
 
 This is a plain static HTML/CSS/JavaScript website. There is no framework router,
 SSR runtime, production package dependency or package-manager install step.
-The public pages are `/`, `/about/`, `/services/`, `/privacy-policy/` and `/terms/`.
+The public pages are `/`, `/about/`, `/services/`, `/privacy-policy/`, `/terms/`,
+and three Phase 3 service pages: `/services/web-development/`,
+`/services/web-app-development/` and `/services/ai-automation/`.
 Work, FAQ, Contact and the project-request form are homepage sections, not separate
 pages. Their normal HTML links and their existing content are retained.
 
@@ -66,6 +68,8 @@ owner/account access to assess that separate infrastructure policy.
 ```sh
 node scripts/build.cjs
 node tests/technical-seo.cjs
+node tests/entity-seo.cjs
+node tests/search-intent-seo.cjs
 node security/verify.cjs
 node tests/reviews-faq.cjs
 node tests/fluid-compatibility.cjs
@@ -83,5 +87,6 @@ After release, verify the real production HTTP statuses, redirects, sitemap XML,
 metadata, private/source-route exclusions, crawler probes, navigation, mobile
 rendering and console. A local test server is not proof of Netlify/CDN behavior.
 
-Strategic metadata rewrites, content expansion, entity/schema expansion, case
-studies and broader performance work are outside this phase.
+Phase 3 search research, service-page ownership and metadata changes are recorded
+in `docs/search-intent-seo.md`. The Phase 1 build, crawler policy and source
+isolation remain intact. Case studies and broader performance work are deferred.

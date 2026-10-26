@@ -6,11 +6,11 @@ const path = require('node:path');
 const os = require('node:os');
 const { build } = require('../scripts/build.cjs');
 const root = path.resolve(__dirname, '..');
-const { output } = build(root);
+const { output, pages } = build(root);
 const read = file => fs.readFileSync(path.join(output, file), 'utf8');
 const attrs = tag => Object.fromEntries(Array.from(tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g), m => [m[1].toLowerCase(), m[2] ?? m[3]]));
 const decode = value => value.replace(/&amp;/g, '&').replace(/&#(?:x([\da-f]+)|(\d+));/gi, (_, hex, dec) => String.fromCodePoint(parseInt(hex || dec, hex ? 16 : 10)));
-const publicPages = ['index.html', 'about/index.html', 'services/index.html', 'privacy-policy/index.html', 'terms/index.html'];
+const publicPages = pages.map(url => new URL(url).pathname.slice(1) + 'index.html');
 const titles = new Set();
 const canonicals = [];
 let checkedLinks = 0, checkedResources = 0;
@@ -112,6 +112,6 @@ try {
   assert.throws(() => build(fixture), /canonical must be/);
 } finally { fs.rmSync(fixture, { recursive: true, force: true }); }
 
-console.log('PASS: 5 public pages; unique metadata, production canonicals, JSON-LD syntax, ' + checkedLinks + ' internal links/fragments, ' + checkedResources + ' local resources; sitemap, robots and admin exclusion.');
+console.log('PASS: ' + publicPages.length + ' public pages; unique metadata, production canonicals, JSON-LD syntax, ' + checkedLinks + ' internal links/fragments, ' + checkedResources + ' local resources; sitemap, robots and admin exclusion.');
 console.log('PASS: internal source excluded; index redirects; future-page discovery; verification files preserved; preview canonical rejected.');
 console.log('HTTP redirects, CDN crawler policy and browser rendering require separate live verification.');

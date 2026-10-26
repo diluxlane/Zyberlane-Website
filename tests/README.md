@@ -6,6 +6,7 @@ Run these dependency-free checks from the repository root:
 node scripts/build.cjs
 node tests/technical-seo.cjs
 node tests/entity-seo.cjs
+node tests/search-intent-seo.cjs
 node security/verify.cjs
 node tests/reviews-faq.cjs
 node tests/fluid-compatibility.cjs
@@ -18,13 +19,19 @@ node --check assets/site-pages.js
 Technical SEO packaging, sitemap/canonical checks and deployment verification are
 documented in [`docs/technical-seo.md`](../docs/technical-seo.md). With development-only
 Playwright and Chromium installed, `node tests/technical-seo-browser.cjs` checks all
-five built public pages at desktop/mobile sizes with JavaScript enabled and disabled.
+all sitemap-discovered public pages at desktop/mobile sizes with JavaScript enabled and disabled.
 It uses the same `PORTFOLIO_BROWSER` executable override as the portfolio suite.
 
 Entity generation and the offline Schema.org relationship checks are documented
 in [`docs/entity-seo.md`](../docs/entity-seo.md). Run
 `node scripts/structured-data.cjs --write` after intentional metadata/service edits;
 stale managed JSON-LD fails the build. Only inert JSON-LD blocks are regenerated.
+
+Phase 3 intent research and page ownership are recorded in
+[`docs/search-intent-seo.md`](../docs/search-intent-seo.md). The search-intent check
+verifies the eight intended destinations, synchronized metadata, heading hierarchy,
+unchanged service identities, detail-page links/breadcrumbs and quotation-based
+positioning. Removing a selected service destination must fail validation.
 
 The security verifier checks executable script syntax, JSON-LD, inline-script
 hashes against both hosting CSPs, package rendering/XSS guards, and pinned SDK
