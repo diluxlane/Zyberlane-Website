@@ -83,7 +83,8 @@ for (const { url, page, html } of documents) {
   if (url !== origin + '/') {
     const breadcrumb = nodes.get(page.breadcrumb['@id']);
     assert.equal(breadcrumb['@type'], 'BreadcrumbList');
-    assert.deepEqual(breadcrumb.itemListElement.map(item => [item.position, item.item]), [[1, origin + '/'], [2, url]]);
+    const trail = [origin + '/', ...(new URL(url).pathname.startsWith('/services/') && url !== origin + '/services/' ? [origin + '/services/'] : []), url];
+    assert.deepEqual(breadcrumb.itemListElement.map(item => [item.position, item.item]), trail.map((item, index) => [index + 1, item]));
     assert.ok(html.includes('href="/">Home</a>')); // A genuine navigation path, not invented intermediate pages.
   }
 }
@@ -95,8 +96,12 @@ const decode = value => value.replace(/&amp;/g, '&');
 const visible = Array.from(services.html.matchAll(/<article class="skill-card"[^>]*>[\s\S]*?<h3>([^<]+)<\/h3>\s*<p>([^<]+)<\/p>[\s\S]*?<\/article>/g), match => [decode(match[1]), decode(match[2])]);
 const represented = services.page.mainEntity.map(reference => {
   const service = nodes.get(reference['@id']); assert.equal(service['@type'], 'Service');
-  assert.equal(service.provider['@id'], org['@id']); assert.equal(service.mainEntityOfPage['@id'], services.page['@id']);
-  assert.equal(service.url, services.url); return [service.name, service.description];
+  assert.equal(service.provider['@id'], org['@id']);
+  const destination = documents.find(document => document.url === service.url);
+  assert.ok(destination, 'Missing public service page');
+  assert.equal(service.mainEntityOfPage['@id'], destination.page['@id']);
+  assert.ok(destination.page.mainEntity.some(reference => reference['@id'] === service['@id']), 'Service not referenced by its destination');
+  return [service.name, service.description];
 });
 assert.deepEqual(represented, visible);
 const banned = ['PostalAddress', 'LocalBusiness', 'FAQPage', 'Review', 'AggregateRating', 'Offer', 'Product', 'SearchAction', 'Project'];

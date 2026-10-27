@@ -5,5 +5,8 @@ http://zyberlane.netlify.app/* https://zyberlane.com/:splat 301!
 /admin/index.html /admin/ 301!
 /index.html / 301!
 /privacy-policy/index.html /privacy-policy/ 301!
+/services/ai-automation/index.html /services/ai-automation/ 301!
 /services/index.html /services/ 301!
+/services/web-app-development/index.html /services/web-app-development/ 301!
+/services/web-development/index.html /services/web-development/ 301!
 /terms/index.html /terms/ 301!

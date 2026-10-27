@@ -8,7 +8,7 @@ const http = require('node:http');
 const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '../dist');
 const csp = fs.readFileSync(path.join(root, '_headers'), 'utf8').split('\n').find(line => line.startsWith('  Content-Security-Policy: ')).slice(27);
-const routes = ['/', '/about/', '/services/', '/privacy-policy/', '/terms/'];
+const routes = Array.from(fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g), match => new URL(match[1]).pathname);
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.xml': 'application/xml', '.txt': 'text/plain' };
 const server = http.createServer((req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
@@ -47,6 +47,7 @@ const server = http.createServer((req, res) => {
             return !loader || getComputedStyle(loader).display === 'none';
           });
           assert.ok(await page.locator('h1').isVisible());
+          assert.equal(await page.locator('h1').count(), 1);
           await page.waitForFunction(() => getComputedStyle(document.querySelector('h1')).opacity === '1');
           assert.equal(await page.locator('h1').evaluate(element => getComputedStyle(element).opacity), '1');
           assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), route + ': horizontal overflow');
@@ -75,10 +76,21 @@ const server = http.createServer((req, res) => {
             const opacity = await page.locator('[data-page-reveal]').first().evaluate(element => getComputedStyle(element).opacity);
             assert.equal(opacity, '1', route + ': no-script content hidden');
           }
+          if (route.startsWith('/services/') && route !== '/services/') {
+            assert.equal(await page.locator('nav[aria-label="Breadcrumb"] a').count(), 3);
+            await page.locator('a.cta-btn[href="/#booking"]').click();
+            assert.equal(new URL(page.url()).origin, base, 'Preview navigation left its own host');
+            assert.equal(new URL(page.url()).hash, '#booking');
+            await page.waitForFunction(() => {
+              const loader = document.getElementById('loadingScreen');
+              return !loader || getComputedStyle(loader).display === 'none';
+            });
+            assert.ok(await page.locator('#booking').isVisible(), 'Service CTA did not reach the project request');
+          }
           pages++;
         }
         await context.close();
-        console.log('PASS: ' + (mobile ? '390px mobile' : '1440px desktop') + ', JavaScript ' + (javaScriptEnabled ? 'enabled' : 'disabled') + ': all 5 pages, navigation, metadata and static content.');
+        console.log('PASS: ' + (mobile ? '390px mobile' : '1440px desktop') + ', JavaScript ' + (javaScriptEnabled ? 'enabled' : 'disabled') + ': all ' + routes.length + ' pages, navigation, metadata and static content.');
       }
     }
     assert.deepEqual(errors, []);
