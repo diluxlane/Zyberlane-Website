@@ -297,6 +297,7 @@
     border-bottom:none;
     border-radius:4px 4px 0 0;
   }
+  .project-card .thumb-frame img.project-brand-preview{object-fit:contain;object-position:center;padding:32px;border-bottom:1px solid rgba(196,22,42,.3);}
   .project-card .body{padding:24px 26px 28px;}
   .project-card .num{font-family:'Space Mono',monospace; color:var(--red-glow); font-size:12px; letter-spacing:.1em;}
   .project-card h3{font-family:'Poppins'; font-weight:700; font-size:20px; margin:12px 0 6px; text-transform:uppercase;}
@@ -311,6 +312,10 @@
     transition:background .3s var(--ease);
   }
   .project-card .visit-btn:hover{background:var(--red);}
+  .project-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px 20px;}
+  .project-card .case-study-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--gray);font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;text-decoration:underline;text-underline-offset:4px;}
+  .project-card .case-study-link:hover{color:var(--white);}
+  .project-card .case-study-link:focus-visible{outline:2px solid var(--red-glow);outline-offset:3px;border-radius:2px;}
 
   /* ---------- SKILLS ---------- */
   .skills-wrap{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr)); gap:24px;}
@@ -770,14 +775,17 @@
         <div class="projects-grid work-track" id="projectsGrid">
     <div class="project-card" data-slug="divine-tattoo" data-project-category="client-projects">
       <div class="thumb-frame">
-        <img src="assets/divine-tattoo-preview.jpg" alt="Divine Tattoo website hero page" loading="lazy" decoding="async">
+        <img class="project-brand-preview" src="assets/divine-tattoo-logo.jpg" alt="Divine Tattoo logo preview for the client project" width="480" height="480" loading="lazy" decoding="async">
       </div>
       <div class="body">
         <div class="num">01</div>
         <h3>Divine Tattoo</h3>
         <span class="category">Studio Website &middot; Content Management</span>
         <p class="desc">A responsive website for an independent tattoo studio, with an artwork gallery and a custom content-management workflow.</p>
-        <a class="visit-btn" href="https://divinetattoo.netlify.app/" target="_blank" rel="noopener">Visit Site &rarr;</a>
+        <div class="project-actions">
+          <a class="visit-btn" href="https://divinetattoo.netlify.app/" target="_blank" rel="noopener noreferrer">Visit Site &rarr;</a>
+          <a class="case-study-link" href="/work/divine-tattoo/">View Case Study <span aria-hidden="true">↗</span></a>
+        </div>
       </div>
     </div>
           <div class="project-card work-end" id="workEndPanel">

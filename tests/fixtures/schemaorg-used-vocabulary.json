@@ -274,6 +274,15 @@
       "range": [
         "URL"
       ]
+    },
+    "creator": {
+      "domain": [
+        "CreativeWork"
+      ],
+      "range": [
+        "Organization",
+        "Person"
+      ]
     }
   }
 }

@@ -114,6 +114,14 @@ function graphs(root, sources) {
       const primaryServices = serviceNodes.filter(service => service.url === page.url);
       if (primaryServices.length) node.mainEntity = primaryServices.map(service => ref(service['@id']));
     }
+    if (page.url === ORIGIN + '/work/divine-tattoo/') {
+      const projectId = page.url + '#project';
+      node.mainEntity = ref(projectId);
+      node.mentions = ref(ORIGIN + '/#service-web-development');
+      graph.push({ '@type': 'CreativeWork', '@id': projectId, name: 'Divine Tattoo client website',
+        description: 'Responsive studio website with an artwork gallery and a custom content-management workflow.',
+        url: page.url, creator: ref(IDS.organization), mainEntityOfPage: ref(page.url + '#webpage') });
+    }
     return { ...page, graph: { '@context': 'https://schema.org', '@graph': graph } };
   });
 }

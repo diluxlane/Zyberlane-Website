@@ -1,6 +1,6 @@
 # Zyberlane regression checks
 
-Run these dependency-free checks from the repository root:
+Run these checks from the repository root. The browser suites require Playwright and Chromium; the other suites are dependency-free:
 
 ```sh
 node scripts/build.cjs
@@ -10,6 +10,8 @@ node tests/search-intent-seo.cjs
 node tests/cms-seo.cjs
 node security/verify.cjs
 node tests/reviews-faq.cjs
+node tests/client-proof.cjs
+node tests/client-proof-browser.cjs
 node tests/fluid-compatibility.cjs
 node --check assets/fluid.js
 node --check assets/fluid-cpu.js
@@ -35,6 +37,13 @@ unchanged service identities, detail-page links/breadcrumbs and quotation-based
 positioning. Removing a selected service destination must fail validation.
 The CMS SEO check covers stale default upgrades, intentional edits, synchronized
 rendered metadata/JSON-LD, identity preservation and safe text serialization.
+
+The Phase 4 client-proof checks verify the project route, factual scope, relationship
+links, metadata, structured data, sitemap inclusion, review handling and preview
+identity. `node tests/client-proof-browser.cjs` checks the case-study page at desktop,
+tablet, phone and narrow-phone widths; it uses the same `PORTFOLIO_BROWSER` override.
+`node tests/portfolio.cjs` checks the existing rails, dialog filtering, keyboard controls,
+mobile scrolling, reduced motion and external project links.
 
 The security verifier checks executable script syntax, JSON-LD, inline-script
 hashes against both hosting CSPs, package rendering/XSS guards, and pinned SDK
