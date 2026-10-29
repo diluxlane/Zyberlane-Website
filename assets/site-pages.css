@@ -284,3 +284,36 @@ footer > .foot-note{flex-basis:100%;margin-top:4px;padding-top:20px;border-top:1
   .company-page *{animation-duration:.001ms!important;transition-duration:.001ms!important;transition-delay:0s!important;scroll-behavior:auto!important;}
   .company-page .skill-card:hover{transform:none;}
 }
+
+/* Divine Tattoo client project page */
+.company-page .case-intro{padding-bottom:56px;}
+.company-page .case-intro-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);align-items:center;gap:clamp(28px,6vw,84px);margin-top:34px;}
+.company-page .case-label{margin:0;color:var(--gray);}
+.company-page .case-intro-grid h1{margin-top:18px;}
+.company-page .case-intro-actions{margin-top:26px;}
+.company-page .case-brand-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;min-height:300px;margin:0;padding:clamp(24px,5vw,56px);border:1px solid var(--line);border-radius:6px;background:radial-gradient(circle at 50% 38%,rgba(196,22,42,.16),transparent 54%),var(--panel);}
+.company-page .case-brand-panel img{display:block;width:min(100%,240px);height:auto;border-radius:50%;}
+.company-page .case-brand-panel figcaption{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#b7b3b0;}
+.company-page .case-brand-panel figcaption span{color:var(--red-glow);padding:0 4px;}
+.company-page .case-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);background:var(--panel);}
+.company-page .case-facts>div{padding:22px 24px;min-width:0;}
+.company-page .case-facts>div+div{border-left:1px solid var(--line);}
+.company-page .case-facts p{margin-top:10px;color:var(--white);font-size:15px;line-height:1.6;overflow-wrap:anywhere;}
+.company-page .case-facts a{color:var(--white);text-decoration:underline;text-decoration-color:var(--red-glow);text-underline-offset:4px;}
+.company-page .case-copy{margin-top:28px;}
+.company-page .case-quote-wrap{max-width:920px;}
+.company-page .case-quote{margin:0;padding:clamp(24px,5vw,48px);border-left:2px solid var(--red-glow);background:var(--panel);}
+.company-page .case-quote blockquote{margin:0;color:var(--white);font-family:'Poppins',sans-serif;font-size:clamp(20px,2.6vw,30px);font-weight:600;line-height:1.5;}
+.company-page .case-quote figcaption{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;margin-top:24px;color:#b7b3b0;font-size:13px;}
+.company-page .case-quote figcaption span:first-child{color:var(--white);font-weight:600;}
+.company-page .case-quote figcaption a{min-height:44px;display:inline-flex;align-items:center;color:#b7b3b0;text-decoration:underline;text-underline-offset:4px;}
+.company-page .case-quote figcaption a:hover{color:var(--white);}
+.company-page .case-quote figcaption a:focus-visible{outline:2px solid var(--red-glow);outline-offset:3px;}
+@media(max-width:760px){
+  .company-page .case-intro-grid{grid-template-columns:minmax(0,1fr);gap:28px;margin-top:24px;}
+  .company-page .case-brand-panel{min-height:240px;padding:28px;}
+  .company-page .case-brand-panel img{width:min(58vw,210px);}
+  .company-page .case-facts{grid-template-columns:minmax(0,1fr);}
+  .company-page .case-facts>div{padding:18px 20px;}
+  .company-page .case-facts>div+div{border-left:0;border-top:1px solid var(--line);}
+}
