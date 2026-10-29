@@ -12,6 +12,7 @@ node security/verify.cjs
 node tests/reviews-faq.cjs
 node tests/client-proof.cjs
 node tests/ai-search-readiness.cjs
+node tests/indexnow.cjs
 node tests/client-proof-browser.cjs
 node tests/fluid-compatibility.cjs
 node --check assets/fluid.js
