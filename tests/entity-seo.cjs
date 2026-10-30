@@ -93,7 +93,11 @@ assert.equal(about.page['@type'], 'AboutPage'); assert.ok(about.html.includes('<
 const services = documents.find(document => document.url === origin + '/services/');
 assert.equal(services.page['@type'], 'CollectionPage'); assert.equal(services.page.mainEntity.length, 3);
 const decode = value => value.replace(/&amp;/g, '&');
-const visible = Array.from(services.html.matchAll(/<article class="skill-card"[^>]*data-service-status="confirmed"[^>]*>[\s\S]*?<h3>([^<]+)<\/h3>\s*<p>([^<]+)<\/p>[\s\S]*?<\/article>/g), match => [decode(match[1]), decode(match[2])]);
+const visible = Array.from(services.html.matchAll(/<article class="skill-card"[^>]*>([\s\S]*?)<\/article>/g), match => {
+  const content=match[1], labels=[...content.matchAll(/data-subservice="([^"]+)"/g)].map(m=>decode(m[1]));
+  if(!labels.length)return null;
+  return [decode(content.match(/<h3>([^<]+)<\/h3>/)[1]), decode(content.match(/<p>([^<]+)<\/p>/)[1])+' Scope includes: '+labels.join(', ')+'.'];
+}).filter(Boolean);
 const represented = services.page.mainEntity.map(reference => {
   const service = nodes.get(reference['@id']); assert.equal(service['@type'], 'Service');
   assert.equal(service.provider['@id'], org['@id']);
@@ -113,7 +117,7 @@ assert.ok(!serialize({ description: '</script><script>alert(1)</script>' }).incl
 
 // Meaningful drift and relationship failures must be caught, not silently published.
 const sources = findSources(root);
-const changed = sources.map(source => source.file === 'services/index.html' ? { ...source, html: source.html.replace('<p>Build credibility, explain your offer', '<p>Changed service wording') } : source);
+const changed = sources.map(source => source.file === 'services/index.html' ? { ...source, html: source.html.replace('<p>Build credibility and make enquiries easier', '<p>Changed service wording') } : source);
 assert.throws(() => checkStructuredData(root, changed), /stale structured data/);
 assert.throws(() => validate({ '@type': 'Organization', affiliation: { '@id': org['@id'] } }), /invalid on/);
 assert.throws(() => validate({ '@type': 'Service', provider: { '@id': origin + '/#missing' } }), /Unresolved/);
@@ -126,5 +130,5 @@ execFileSync(process.execPath, ['scripts/build.cjs'], { cwd: root, env: { ...pro
 for (const { url, html } of documents) assert.equal(read(fileFor(url)), html, 'Hosting environment changed HTML/SEO identity');
 
 console.log('PASS: ' + documents.length + ' connected page graphs; ' + nodes.size + ' unique entity definitions; ' + propertiesChecked + ' property/range checks against the retrieved Schema.org vocabulary.');
-console.log('PASS: public founder/organization/profile facts; three confirmed visible services; conditional specialist requests excluded; real logo; production-only identities even under preview environment variables; breadcrumbs; drift detection; invalid relationships rejected; no personal/private/fabricated extensions.');
+console.log('PASS: public founder/organization/profile facts; three confirmed visible services; unverified request areas excluded; sub-service scope aligned; real logo; production-only identities even under preview environment variables; breadcrumbs; drift detection; invalid relationships rejected; no personal/private/fabricated extensions.');
 console.log('Schema vocabulary and graph checks do not guarantee Google rich-result display or search/AI ranking.');

@@ -50,7 +50,7 @@ vercel.json          Vercel configuration
 
 ## Current positioning and content ownership
 
-See [the agency repositioning report](docs/agency-repositioning.md) for scope, capability gates and validation. The six buyer-facing service areas are curated in source; three confirmed core service families appear in JSON-LD. Branding, marketing and content remain conditional enquiries until suitable specialist delivery is confirmed. Legacy CMS expertise cards no longer replace the homepage Why section or service architecture. No database records were modified.
+See [the current service hierarchy](docs/service-hierarchy.md) for the six categories, 23 advertised sub-services and internal omissions. The six buyer-facing project areas are curated in source; three evidence-backed service families appear in JSON-LD with their exact advertised scope. Branding, marketing and content currently invite project briefs without advertising unverified sub-services. Readiness decisions live in the excluded internal capability register, never as public status badges. Legacy CMS expertise cards no longer replace the homepage Why section or service architecture. No database records were modified.
 
 The full portfolio is `/work/`; `?category=` filters the same canonical page. The existing genuine case study remains `/work/divine-tattoo/`. Future blog and case-study indexes are documented, not published as empty pages.
 

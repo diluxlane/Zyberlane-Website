@@ -3,6 +3,7 @@
 // Source-controlled JSON-LD generation. Never derive identity from a request host or environment.
 const fs = require('node:fs');
 const path = require('node:path');
+const CAPABILITY_GROUPS = require('./service-capabilities.cjs');
 const ORIGIN = 'https://zyberlane.com';
 const IDS = Object.freeze({ organization: ORIGIN + '/#organization', website: ORIGIN + '/#website', founder: ORIGIN + '/#founder', logo: ORIGIN + '/#logo' });
 const PROFILES = Object.freeze(['https://github.com/Zyberlane', 'https://maps.app.goo.gl/43SbLYGa6dmvyjkN6']);
@@ -63,15 +64,23 @@ function graphs(root, sources) {
   if (!fs.existsSync(logoFile)) throw new Error('Missing existing official logo');
   const cards = Array.from(services.html.matchAll(/<article\b([^>]*)>([\s\S]*?)<\/article>/gi))
     .filter(match => (attributes(match[1]).class || '').split(/\s+/).includes('skill-card'));
-  const serviceNodes = cards.filter(match => {
+  // Operational readiness stays in the internal register, not public status labels.
+  const catalog = cards.map(match => {
+    const id = attributes(match[1]).id;
+    const group = CAPABILITY_GROUPS.find(group => group.id === id);
     const name = text(match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i)?.[1] || '');
-    const status = attributes(match[1])['data-service-status'];
-    if (!['confirmed', 'conditional'].includes(status)) throw new Error('Service availability must be explicit: ' + name);
-    return status === 'confirmed'; // Conditional enquiries are not confirmed Service entities.
-  }).map(match => {
-    const name = text(match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i)?.[1] || '');
-    const description = text(match[2].match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1] || '');
-    if (!SERVICE_IDS[name] || !description) throw new Error('Assign a verified, persistent identity to the visible service: ' + name);
+    if (!group || group.name !== name) throw new Error('Unknown service category: ' + name);
+    const labels = tags(match[2], 'li').map(item => item['data-subservice']);
+    if (JSON.stringify(labels) !== JSON.stringify(group.services.map(item => item[0]))) {
+      throw new Error('Visible sub-services do not match verified scope: ' + name);
+    }
+    return { match, group, name, labels };
+  });
+  if (catalog.length !== CAPABILITY_GROUPS.length || new Set(catalog.map(item => item.group.id)).size !== CAPABILITY_GROUPS.length) throw new Error('Expected six distinct service categories');
+  const serviceNodes = catalog.filter(item => item.labels.length).map(({ match, name, labels }) => {
+    const summary = text(match[2].match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1] || '');
+    const description = summary + ' Scope includes: ' + labels.join(', ') + '.';
+    if (!SERVICE_IDS[name] || !summary) throw new Error('Assign a verified, persistent identity to the visible service: ' + name);
     const destination = ORIGIN + (SERVICE_PAGES[SERVICE_IDS[name]] || '/services/');
     if (!pages.some(page => page.url === destination)) throw new Error('Missing canonical service destination: ' + destination);
     return { '@type': 'Service', '@id': ORIGIN + '/#service-' + SERVICE_IDS[name], name, description,

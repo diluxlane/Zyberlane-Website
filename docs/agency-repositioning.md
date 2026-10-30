@@ -1,3 +1,5 @@
+> Follow-up: [service-hierarchy.md](service-hierarchy.md) supersedes the original public confirmation labels and abbreviated service lists described below. PR #47 is merged; this report remains the historical implementation record.
+
 # Zyberlane agency repositioning — review report
 
 Audit date: 30 October 2026. Base: `909f0077a5a7051ec60783528549efc0dfef8973` on `main`. Branch: `feat/zyberlane-agency-repositioning`. This is a content/business architecture update, not an additional SEO phase or a visual redesign.

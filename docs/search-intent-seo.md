@@ -1,3 +1,5 @@
+> Current service hierarchy: see [service-hierarchy.md](service-hierarchy.md) for six project areas, 23 advertised sub-services, internal omissions and current intent ownership. No sub-service landing pages were added.
+
 > Historical phase record. Current agency positioning, service ownership, ten-route sitemap and portfolio navigation supersede conflicting older copy/counts here. See [agency-repositioning.md](agency-repositioning.md). Technical safeguards remain applicable.
 
 # Search intent and service architecture
