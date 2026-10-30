@@ -17,15 +17,16 @@ function harness(){
   }]));
   const block = { textContent: JSON.stringify(initialGraph) };
   const hero = { textContent: 'Source hero text', getAttribute: () => 'hero_description' };
+  const role = { textContent: 'Source role text', getAttribute: () => 'hero_role' };
   const document = {
     title,
-    querySelector: selector => selector.includes('[data-cms=') ? hero : elements[selector],
-    querySelectorAll: selector => selector === '[data-cms]' ? [hero] : [],
+    querySelector: selector => selector === '[data-cms="hero_role"]' ? role : selector === '[data-cms="hero_description"]' ? hero : elements[selector],
+    querySelectorAll: selector => selector === '[data-cms]' ? [hero, role] : [],
     getElementById: id => id === 'zyberlane-structured-data' ? block : null
   };
   const sandbox = { document, STAT_KEYS: [] };
   vm.createContext(sandbox); vm.runInContext(source, sandbox);
-  return { elements, block, hero, document, apply: sandbox.applySiteSettings };
+  return { elements, block, hero, role, document, apply: sandbox.applySiteSettings };
 }
 function verify(h, expectedTitle, expectedDescription){
   assert.equal(h.document.title, expectedTitle);
@@ -63,3 +64,19 @@ verify(malicious, title, payload); assert.ok(!malicious.block.textContent.includ
 const missing = harness(); missing.apply([]); verify(missing, title, description);
 const blank = harness(); blank.apply([{ key: 'seo_title', value: ' ' }, { key: 'seo_description', value: '' }]); verify(blank, title, description);
 console.log('PASS: two legacy CMS defaults retain reviewed metadata; intentional SEO/hero edits work; rendered title/description/social/graph stay aligned; all entity identities unchanged; script-breakout text escaped; missing/blank settings preserve source defaults.');
+
+// Previously shipped hero defaults upgrade; custom client-facing copy remains editable.
+for (const oldRole of ['Software Company & AI Vibe Coding', 'Software · Web · AI · Automation']) {
+  const h = harness(); h.apply([{ key: 'hero_role', value: oldRole }]);
+  assert.equal(h.role.textContent, 'Source role text');
+}
+for (const oldHero of [
+  'We design and build software and websites by pairing human direction with AI vibe coding — turning ideas into working products fast, without cutting corners on craft.',
+  'We build websites, software and AI automation for businesses and creators,\n        remotely from Sri Lanka with direct founder communication.'
+]) {
+  const h = harness(); h.apply([{ key: 'hero_description', value: oldHero }]);
+  assert.equal(h.hero.textContent, 'Source hero text');
+}
+const editedRole = harness(); editedRole.apply([{ key: 'hero_role', value: 'A custom role line' }]);
+assert.equal(editedRole.role.textContent, 'A custom role line');
+console.log('PASS: previous hero defaults upgrade across whitespace; custom role and description edits retain precedence.');
