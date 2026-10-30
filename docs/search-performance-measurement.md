@@ -91,3 +91,7 @@ Run the same small set before release (clearly marked old production) and after 
 | CWV report has no data | Check property/device and CrUX sufficiency | Do not call it a performance failure |
 
 The next phase can use this evidence for a full release-readiness audit. Do not start Phase 10 or publish to Netlify from this document.
+
+## Insights measurement
+
+After owner-controlled production publication, track `/insights/` separately as the Blog and Case Studies collection and retain `/work/divine-tattoo/` as the client-proof detail destination. Review actual branded, case-study and informational queries; associate future articles with existing web/brand/marketing/search/AI query families only after publication. Record impressions, clicks and downstream enquiry journeys where measurement is configured; no baseline or uplift is asserted. Preview traffic is excluded. There are no article URLs or BlogPosting entities to track yet.

@@ -8,7 +8,7 @@ const { findSources, checkStructuredData } = require('../scripts/structured-data
 const root = path.resolve(__dirname, '..');
 const { output, pages } = build(root);
 const origin = 'https://zyberlane.com';
-const routes = ['/', '/about/', '/services/', '/services/web-development/', '/services/web-app-development/', '/services/ai-automation/', '/privacy-policy/', '/terms/', '/work/', '/work/divine-tattoo/'];
+const routes = ['/', '/insights/', '/about/', '/services/', '/services/web-development/', '/services/web-app-development/', '/services/ai-automation/', '/privacy-policy/', '/terms/', '/work/', '/work/divine-tattoo/'];
 const detailRoutes = routes.filter(route => route.startsWith('/services/') && route !== '/services/');
 const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
 assert.ok(vercel.redirects.some(rule => rule.source === '/services/:service/index.html' && rule.destination === '/services/:service/' && rule.permanent === true), 'Nested service index.html variants need permanent same-host redirects');
@@ -90,4 +90,4 @@ assert.match(documents.get('/services/ai-automation/').html, /id="business-autom
 const sources = findSources(root).filter(source => source.file !== 'services/web-development/index.html');
 assert.throws(() => checkStructuredData(root, sources), /Missing canonical service destination/);
 assert.ok(!fs.existsSync(path.join(output, 'docs')), 'Research record must not ship as a public SEO page');
-console.log('PASS: 10 public destinations including the Phase 4 project page; unique synchronized metadata; one H1 and ordered headings; three retained service detail pages and the standalone portfolio; three confirmed service entities; real breadcrumbs; production identity; quotation-based content; missing destinations rejected.');
+console.log('PASS: 11 public destinations including the Phase 4 project page; unique synchronized metadata; one H1 and ordered headings; three retained service detail pages and the standalone portfolio; three confirmed service entities; real breadcrumbs; production identity; quotation-based content; missing destinations rejected.');

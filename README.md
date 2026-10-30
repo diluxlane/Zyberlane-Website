@@ -92,3 +92,7 @@ Browser-accessible Supabase configuration must remain limited to values designed
 No repository-wide open-source license is provided.
 
 Public visibility of this repository does not by itself grant permission to reuse Zyberlane branding, site-specific design, original content, client materials or proprietary project assets. Third-party code, fonts, libraries, trademarks and media remain subject to their original licenses and ownership.
+
+### Blog & Case Studies
+
+`/insights/` combines genuine client case studies and the future Blog. Divine Tattoo remains at `/work/divine-tattoo/`; no articles are published yet. See [hub architecture and verification](docs/insights-hub.md).

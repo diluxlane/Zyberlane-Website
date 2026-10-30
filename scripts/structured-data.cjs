@@ -89,7 +89,7 @@ function graphs(root, sources) {
   if (!serviceNodes.length || new Set(serviceNodes.map(node => node['@id'])).size !== serviceNodes.length) throw new Error('Missing/duplicate service identities');
 
   return pages.map(page => {
-    const type = page === about ? 'AboutPage' : (page === services || page.url === ORIGIN + '/work/') ? 'CollectionPage' : 'WebPage';
+    const type = page === about ? 'AboutPage' : (page === services || [ORIGIN + '/work/', ORIGIN + '/insights/'].includes(page.url)) ? 'CollectionPage' : 'WebPage';
     const node = { '@type': type, '@id': page.url + '#webpage', url: page.url, name: page.name, description: page.description,
       isPartOf: ref(IDS.website), about: ref(IDS.organization) };
     const graph = [node];
@@ -123,7 +123,7 @@ function graphs(root, sources) {
       if (primaryServices.length) node.mainEntity = primaryServices.map(service => ref(service['@id']));
     }
     if (page.url === ORIGIN + '/services/web-app-development/') node.mainEntity = [ref(ORIGIN + '/#service-web-development')];
-    if (page.url === ORIGIN + '/work/') node.mentions = [ref(ORIGIN + '/work/divine-tattoo/#project')];
+    if ([ORIGIN + '/work/', ORIGIN + '/insights/'].includes(page.url)) node.mentions = [ref(ORIGIN + '/work/divine-tattoo/#project')];
     if (page.url === ORIGIN + '/work/divine-tattoo/') {
       const projectId = page.url + '#project';
       node.mainEntity = ref(projectId);

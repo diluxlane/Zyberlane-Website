@@ -125,3 +125,7 @@ paths where available.
 
 Algorithm reference: Mark Harris,
 [GPU Gems chapter 38](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu).
+
+## Combined Insights hub
+
+Run `node tests/insights.cjs` for the 11-route sitemap, production CollectionPage identity, genuine project relationship, internal links and absence of fake blog content or separate blog/case-study indexes. Earlier ten-route counts above describe the previous release.
