@@ -184,7 +184,7 @@ Representative screenshots were inspected for the mobile hero, narrow service he
 
 ## 18. Vercel preview
 
-Use the existing GitHub-connected project only. No Vercel project/settings changes or manual deployments. PR preview status/URL will be recorded after the branch push; it is not a production publication. Owner review is required before merge/release. Preview remains subject to the existing platform noindex/access controls; no protection bypass is used.
+PR: [#47](https://github.com/diluxlane/Zyberlane-Website/pull/47), open and unmerged. The connected GitHub Vercel status for implementation commit `a27bb221c2ea3318e786094a9249faf9bf5d0115` reports **success — Deployment has completed**. [Preview](https://zyberlane-website-git-feat-zyberlane-agency-repo-d0c72c-diluxln.vercel.app) · [Deployment details](https://vercel.com/diluxln/zyberlane-website/F6spBwypc8oUbG7dxa3iBPzgpzKj). No Vercel project/settings changes or manual deployments. This is not a production publication. Owner review is required before merge/release. A direct HTTP header check of the preview returned **302 to Vercel SSO with `X-Robots-Tag: noindex`**. Preview noindex is therefore observed; page rendering behind the sign-in wall was not verified. No protection bypass is used. The subsequent report-only commit may trigger another automatic preview build.
 
 ## 19. Netlify
 
