@@ -83,7 +83,7 @@ for (const { url, page, html } of documents) {
   if (url !== origin + '/') {
     const breadcrumb = nodes.get(page.breadcrumb['@id']);
     assert.equal(breadcrumb['@type'], 'BreadcrumbList');
-    const trail = [origin + '/', ...(new URL(url).pathname.startsWith('/services/') && url !== origin + '/services/' ? [origin + '/services/'] : []), url];
+    const trail = [origin + '/', ...(new URL(url).pathname.startsWith('/services/') && url !== origin + '/services/' ? [origin + '/services/'] : []), ...(url === origin + '/work/divine-tattoo/' ? [origin + '/work/'] : []), url];
     assert.deepEqual(breadcrumb.itemListElement.map(item => [item.position, item.item]), trail.map((item, index) => [index + 1, item]));
     assert.ok(html.includes('href="/">Home</a>')); // A genuine navigation path, not invented intermediate pages.
   }
@@ -91,9 +91,9 @@ for (const { url, page, html } of documents) {
 const about = documents.find(document => document.url === origin + '/about/');
 assert.equal(about.page['@type'], 'AboutPage'); assert.ok(about.html.includes('<h3>Dilukshan (Dilux)</h3>'));
 const services = documents.find(document => document.url === origin + '/services/');
-assert.equal(services.page['@type'], 'CollectionPage'); assert.equal(services.page.mainEntity.length, 6);
+assert.equal(services.page['@type'], 'CollectionPage'); assert.equal(services.page.mainEntity.length, 3);
 const decode = value => value.replace(/&amp;/g, '&');
-const visible = Array.from(services.html.matchAll(/<article class="skill-card"[^>]*>[\s\S]*?<h3>([^<]+)<\/h3>\s*<p>([^<]+)<\/p>[\s\S]*?<\/article>/g), match => [decode(match[1]), decode(match[2])]);
+const visible = Array.from(services.html.matchAll(/<article class="skill-card"[^>]*data-service-status="confirmed"[^>]*>[\s\S]*?<h3>([^<]+)<\/h3>\s*<p>([^<]+)<\/p>[\s\S]*?<\/article>/g), match => [decode(match[1]), decode(match[2])]);
 const represented = services.page.mainEntity.map(reference => {
   const service = nodes.get(reference['@id']); assert.equal(service['@type'], 'Service');
   assert.equal(service.provider['@id'], org['@id']);
@@ -113,7 +113,7 @@ assert.ok(!serialize({ description: '</script><script>alert(1)</script>' }).incl
 
 // Meaningful drift and relationship failures must be caught, not silently published.
 const sources = findSources(root);
-const changed = sources.map(source => source.file === 'services/index.html' ? { ...source, html: source.html.replace('<p>Business websites, landing pages and portfolios', '<p>Changed service wording and portfolios') } : source);
+const changed = sources.map(source => source.file === 'services/index.html' ? { ...source, html: source.html.replace('<p>Build credibility, explain your offer', '<p>Changed service wording') } : source);
 assert.throws(() => checkStructuredData(root, changed), /stale structured data/);
 assert.throws(() => validate({ '@type': 'Organization', affiliation: { '@id': org['@id'] } }), /invalid on/);
 assert.throws(() => validate({ '@type': 'Service', provider: { '@id': origin + '/#missing' } }), /Unresolved/);
@@ -126,5 +126,5 @@ execFileSync(process.execPath, ['scripts/build.cjs'], { cwd: root, env: { ...pro
 for (const { url, html } of documents) assert.equal(read(fileFor(url)), html, 'Hosting environment changed HTML/SEO identity');
 
 console.log('PASS: ' + documents.length + ' connected page graphs; ' + nodes.size + ' unique entity definitions; ' + propertiesChecked + ' property/range checks against the retrieved Schema.org vocabulary.');
-console.log('PASS: public founder/organization/profile facts; six matching visible services; real logo; production-only identities even under preview environment variables; breadcrumbs; drift detection; invalid relationships rejected; no personal/private/fabricated extensions.');
+console.log('PASS: public founder/organization/profile facts; three confirmed visible services; conditional specialist requests excluded; real logo; production-only identities even under preview environment variables; breadcrumbs; drift detection; invalid relationships rejected; no personal/private/fabricated extensions.');
 console.log('Schema vocabulary and graph checks do not guarantee Google rich-result display or search/AI ranking.');

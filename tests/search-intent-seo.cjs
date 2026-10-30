@@ -8,7 +8,7 @@ const { findSources, checkStructuredData } = require('../scripts/structured-data
 const root = path.resolve(__dirname, '..');
 const { output, pages } = build(root);
 const origin = 'https://zyberlane.com';
-const routes = ['/', '/about/', '/services/', '/services/web-development/', '/services/web-app-development/', '/services/ai-automation/', '/privacy-policy/', '/terms/', '/work/divine-tattoo/'];
+const routes = ['/', '/about/', '/services/', '/services/web-development/', '/services/web-app-development/', '/services/ai-automation/', '/privacy-policy/', '/terms/', '/work/', '/work/divine-tattoo/'];
 const detailRoutes = routes.filter(route => route.startsWith('/services/') && route !== '/services/');
 const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
 assert.ok(vercel.redirects.some(rule => rule.source === '/services/:service/index.html' && rule.destination === '/services/:service/' && rule.permanent === true), 'Nested service index.html variants need permanent same-host redirects');
@@ -55,13 +55,10 @@ const overview = documents.get('/services/');
 const definitions = overview.graph.filter(node => node['@type'] === 'Service');
 const destinations = {
   'web-development': '/services/web-development/',
-  'software-development': '/services/web-app-development/',
-  'mobile-app-development': '/services/',
   'ai-agents-automation': '/services/ai-automation/',
-  'business-automation-integrations': '/services/ai-automation/',
   'seo-web-optimization': '/services/'
 };
-assert.equal(definitions.length, 6, 'Existing service coverage must be retained');
+assert.equal(definitions.length, 3, 'Only confirmed service families belong in the public entity catalog');
 for (const [slug, route] of Object.entries(destinations)) {
   const service = definitions.find(node => node['@id'] === origin + '/#service-' + slug);
   assert.ok(service, 'Persistent service identity lost: ' + slug);
@@ -82,7 +79,8 @@ for (const route of detailRoutes) {
   assert.deepEqual(trail.map(item => item.item), [origin + '/', origin + '/services/', origin + route]);
   assert.ok(html.includes('href="' + route + '" aria-current="page">' + trail[2].name + '</a>'));
   assert.ok(page.mainEntity.length >= 1);
-  assert.ok(html.includes('Sri Lanka') && html.includes('Dilux'));
+  assert.ok(html.includes('remotely') && html.includes('Dilux'));
+  assert.ok(!/from Sri Lanka|in Sri Lanka/.test(html.split('</head>')[1]), 'Global service copy must not lead with geographic targeting');
   assert.ok(!/\b(?:LKR|USD|Rs\.?)\s*[\d,]+|\$\s*\d|#1|world-class|leading company|best-in-class/i.test(text(html.split('</head>')[1])), 'Unsupported price or positioning claim');
 }
 assert.match(documents.get('/services/web-development/').html, /Divine Tattoo[\s\S]*?Client Projects/);
@@ -92,4 +90,4 @@ assert.match(documents.get('/services/ai-automation/').html, /id="business-autom
 const sources = findSources(root).filter(source => source.file !== 'services/web-development/index.html');
 assert.throws(() => checkStructuredData(root, sources), /Missing canonical service destination/);
 assert.ok(!fs.existsSync(path.join(output, 'docs')), 'Research record must not ship as a public SEO page');
-console.log('PASS: 9 public destinations including the Phase 4 project page; unique synchronized metadata; one H1 and ordered headings; three discoverable service pages; six stable service entities; real breadcrumbs; production identity; quotation-based content; missing destinations rejected.');
+console.log('PASS: 10 public destinations including the Phase 4 project page; unique synchronized metadata; one H1 and ordered headings; three retained service detail pages and the standalone portfolio; three confirmed service entities; real breadcrumbs; production identity; quotation-based content; missing destinations rejected.');

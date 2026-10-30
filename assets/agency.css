@@ -1,0 +1,15 @@
+/* Reuse the existing typography, surfaces and spacing. New content layouts only. */
+.agency-intro,.agency-note{max-width:780px;color:var(--gray);font-size:14px;line-height:1.8;margin-bottom:28px;}
+.agency-note{margin-top:24px;margin-bottom:0;font-size:12px;}
+.agency-link,.agency-note a{color:var(--gray);text-decoration:underline;text-underline-offset:5px;font-family:'Space Mono',monospace;font-size:11px;}
+.skill-card .agency-link{display:block;margin-top:20px;line-height:1.8;}
+.agency-link:hover,.agency-note a:hover{color:var(--white);}
+.agency-actions{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:28px;}
+.agency-link:focus-visible,.why-rail:focus-visible{outline:2px solid var(--red-glow);outline-offset:5px;}
+.why-rail{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;padding:6px 0 14px;}
+.why-rail .skill-card{flex:0 0 min(380px,88%);scroll-snap-align:start;}
+.platform-list{list-style:none;display:flex;flex-wrap:wrap;gap:12px;}
+.platform-list li{border:1px solid var(--line);border-radius:4px;background:var(--panel);padding:14px 20px;font-family:'Space Mono',monospace;font-size:12px;}
+#agencyServices .skill-card,#skills .skill-card{min-width:0;overflow-wrap:anywhere;}
+@media(max-width:560px){.stats{gap:16px;}.stat b{font-size:clamp(22px,6vw,30px);}.hero-copy .role{overflow-wrap:anywhere;}.agency-actions .cta-btn{font-size:11px;}}
+@media(prefers-reduced-motion:reduce){.why-rail{scroll-behavior:auto;}}

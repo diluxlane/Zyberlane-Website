@@ -1,3 +1,5 @@
+> Historical phase record. Current agency positioning, service ownership, ten-route sitemap and portfolio navigation supersede conflicting older copy/counts here. See [agency-repositioning.md](agency-repositioning.md). Technical safeguards remain applicable.
+
 # Final SEO / AEO / GEO release-readiness audit — Phase 10
 
 Audit date: 2026-10-30 (Sri Lanka). Source: GitHub `main` commit `9c7b0dd3320d41c2b6568d80827cbb2275a98f42`. **Status: ready for owner review; no verified repository-level technical release blocker.** This does not approve the current visual presentation or publish the build. Netlify production is intentionally older. The owner controls the later publication.

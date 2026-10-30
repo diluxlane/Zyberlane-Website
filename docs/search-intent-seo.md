@@ -1,3 +1,5 @@
+> Historical phase record. Current agency positioning, service ownership, ten-route sitemap and portfolio navigation supersede conflicting older copy/counts here. See [agency-repositioning.md](agency-repositioning.md). Technical safeguards remain applicable.
+
 # Search intent and service architecture
 
 Research and architecture decision: 25 October 2026. This record was written

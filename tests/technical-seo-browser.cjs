@@ -62,7 +62,7 @@ const server = http.createServer((req, res) => {
           }
           if (route === '/') {
             assert.equal(await page.locator('#work .project-card[data-slug]').count(), 2);
-            assert.equal(await page.locator('#faq .faq-answer').count(), 10);
+            assert.equal(await page.locator('#faq .faq-answer').count(), 12);
             assert.equal(await page.locator('#contactEmailLink').getAttribute('href'), 'mailto:contact@zyberlane.com');
             if (javaScriptEnabled) {
               await page.locator('#faq-services').scrollIntoViewIfNeeded();
@@ -70,9 +70,9 @@ const server = http.createServer((req, res) => {
               assert.equal(await page.locator('#faq-services').getAttribute('aria-expanded'), 'true');
             } else {
               assert.ok(await page.locator('#faq-answer-services').isVisible());
-              assert.ok(await page.locator('#servicesGrid').innerText());
+              assert.ok(await page.locator('#whyZyberlaneGrid').innerText());
             }
-          } else if (!javaScriptEnabled) {
+          } else if (!javaScriptEnabled && route !== '/work/') {
             const opacity = await page.locator('[data-page-reveal]').first().evaluate(element => getComputedStyle(element).opacity);
             assert.equal(opacity, '1', route + ': no-script content hidden');
           }

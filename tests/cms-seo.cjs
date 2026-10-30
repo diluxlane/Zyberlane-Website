@@ -5,7 +5,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const html = fs.readFileSync(require('node:path').join(__dirname, '../index.html'), 'utf8');
-const source = html.slice(html.indexOf('  function applySeoMetadata('), html.indexOf('  // ---------- services (Core Expertise)'));
+const cms = fs.readFileSync(require('node:path').join(__dirname, '../assets/site-content.js'), 'utf8');
+const source = cms.slice(cms.indexOf('  function applySeoMetadata('), cms.indexOf('  // ---------- services (source-controlled agency scope)'));
 const title = html.match(/<title>(.*?)<\/title>/)[1].replace(/&amp;/g, '&');
 const description = html.match(/<meta name="description" content="([^"]+)"/)[1].replace(/&#x27;/g, "'").replace(/&amp;/g, '&');
 const initialGraph = JSON.parse(html.match(/<script type="application\/ld\+json" id="zyberlane-structured-data">([\s\S]*?)<\/script>/)[1]);
@@ -45,6 +46,7 @@ function verify(h, expectedTitle, expectedDescription){
   }
 }
 for (const [oldTitle, oldDescription] of [
+  ['Zyberlane | Websites, Software & AI from Sri Lanka', "Founder-led website, web application and AI automation development from Sri Lanka. Explore Zyberlane's work and discuss a project with Dilux."],
   ['Zyberlane | Software, Web, AI & Automation | Sri Lanka', 'Zyberlane builds software, websites, AI systems and automation with a practical project scope. Based in Sri Lanka, working remotely with businesses and creators.'],
   ['Zyberlane — Software Company & AI Vibe Coding | Sri Lanka', 'Zyberlane builds websites and software with AI vibe coding and prompt engineering. Based in Sri Lanka, open for new client projects.']
 ]) {
@@ -66,13 +68,14 @@ const blank = harness(); blank.apply([{ key: 'seo_title', value: ' ' }, { key: '
 console.log('PASS: two legacy CMS defaults retain reviewed metadata; intentional SEO/hero edits work; rendered title/description/social/graph stay aligned; all entity identities unchanged; script-breakout text escaped; missing/blank settings preserve source defaults.');
 
 // Previously shipped hero defaults upgrade; custom client-facing copy remains editable.
-for (const oldRole of ['Software Company & AI Vibe Coding', 'Software · Web · AI · Automation']) {
+for (const oldRole of ['Software Company & AI Vibe Coding', 'Software · Web · AI · Automation', 'Software, Web, AI & Automation', 'Digital tools for your business']) {
   const h = harness(); h.apply([{ key: 'hero_role', value: oldRole }]);
   assert.equal(h.role.textContent, 'Source role text');
 }
 for (const oldHero of [
   'We design and build software and websites by pairing human direction with AI vibe coding — turning ideas into working products fast, without cutting corners on craft.',
-  'We build websites, software and AI automation for businesses and creators,\n        remotely from Sri Lanka with direct founder communication.'
+  'We build websites, software and AI automation for businesses and creators,\n        remotely from Sri Lanka with direct founder communication.',
+  'Websites that explain your business. Software and automation that simplify everyday tasks. Built remotely from Sri Lanka, working directly with founder Dilux.'
 ]) {
   const h = harness(); h.apply([{ key: 'hero_description', value: oldHero }]);
   assert.equal(h.hero.textContent, 'Source hero text');
