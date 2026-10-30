@@ -113,7 +113,7 @@ assert.ok(!serialize({ description: '</script><script>alert(1)</script>' }).incl
 
 // Meaningful drift and relationship failures must be caught, not silently published.
 const sources = findSources(root);
-const changed = sources.map(source => source.file === 'services/index.html' ? { ...source, html: source.html.replace('Modern websites and web experiences', 'Changed service wording and web experiences') } : source);
+const changed = sources.map(source => source.file === 'services/index.html' ? { ...source, html: source.html.replace('<p>Business websites, landing pages and portfolios', '<p>Changed service wording and portfolios') } : source);
 assert.throws(() => checkStructuredData(root, changed), /stale structured data/);
 assert.throws(() => validate({ '@type': 'Organization', affiliation: { '@id': org['@id'] } }), /invalid on/);
 assert.throws(() => validate({ '@type': 'Service', provider: { '@id': origin + '/#missing' } }), /Unresolved/);
