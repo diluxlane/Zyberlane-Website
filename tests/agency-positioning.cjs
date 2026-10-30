@@ -5,7 +5,7 @@ const {build}=require('../scripts/build.cjs');
 const {checkStructuredData,findSources}=require('../scripts/structured-data.cjs');
 const {pages}=build(root),home=read('index.html'),work=read('work/index.html'),overview=read('services/index.html'),cms=read('assets/site-content.js');
 const keys=['client-projects','concept-projects','design-studies'];
-assert.equal(pages.length,10);
+assert.equal(pages.length,11);
 assert.ok(pages.includes('https://zyberlane.com/work/'));
 for(const route of ['blog','case-studies'])assert.ok(!pages.includes('https://zyberlane.com/'+route+'/'),'No empty public index');
 const visible=home.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'');

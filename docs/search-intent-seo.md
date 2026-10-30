@@ -198,3 +198,7 @@ before expanding. Consider mobile/SEO detail pages only with distinct, verified
 scope, practical answers and relevant proof. Case studies need owner-approved
 client facts and must preserve portfolio category truth. No blog, case studies,
 location pages, backlink program or new packages are part of this phase.
+
+## Insights hub (current architecture)
+
+`/insights/` owns discovery of Blog and Case Studies in one useful collection. The first entry links to the existing `/work/divine-tattoo/` client case study. Blog has no approved articles and uses an honest empty state. No `/blog/`, `/case-studies/`, topic doorway pages or future article URLs are published. Future substantive, approved articles can use `/insights/<slug>/`; add metadata, factual article schema and collection links only when the article exists. The historical phase scope above does not prohibit this separately requested hub.
