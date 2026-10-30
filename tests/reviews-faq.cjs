@@ -188,7 +188,7 @@ for (const reduced of [false, true]) {
   assert.equal(inline.section.classes.has('scroll-stories'), !reduced);
 }
 
-const stories = html.slice(html.indexOf('<section id="testimonials"'), html.indexOf('<!-- ================= SKILLS'));
+const stories = html.slice(html.indexOf('<section id="testimonials"'), html.indexOf('</section>', html.indexOf('<section id="testimonials"')) + 10);
 const review = stories.match(/<blockquote\b[^>]*>([\s\S]*?)<\/blockquote>/)[1];
 const paragraphs = [...review.matchAll(/<p>([\s\S]*?)<\/p>/g)].map(m => m[1].replace(/<[^>]*>/g, ''));
 assert.deepEqual(paragraphs, [
@@ -208,7 +208,7 @@ assert.ok(!/5\.0|on Google|↗/.test(cardRating), 'individual Google review omit
 assert.match(stories, /class="story-stars" role="img" aria-label="Google review: 5 stars">★★★★★<\/span>/, 'individual review stars remain separately labeled');
 assert.ok(!stories.includes('class="story-source"'), 'duplicate bottom Google Review link is removed');
 assert.ok(html.indexOf('<section id="work"') < html.indexOf('<section id="testimonials"'));
-assert.ok(html.indexOf('<section id="testimonials"') < html.indexOf('<section id="skills"'));
+assert.ok(html.indexOf('<section id="skills"') < html.indexOf('<section id="work"'));
 assert.ok(html.indexOf('<section class="quote-section"') < html.indexOf('<section id="faq"'));
 assert.ok(html.indexOf('<section id="contact"') < html.indexOf('<section id="booking"'));
 assert.ok(html.indexOf('<section id="booking"') < html.indexOf('<section id="faq"'));
@@ -222,7 +222,7 @@ assert.equal((stories.match(/href="#work"/g) || []).length, 3, 'logo, reviewer a
 assert.match(stories, /<img src="\/assets\/divine-tattoo-logo\.jpg" width="52" height="52" alt="Divine Tattoo"/);
 assert.ok(!html.includes("sb.from('testimonials')"), 'CMS cannot replace or hide the supplied review');
 assert.ok(!html.includes('"@type": "FAQPage"'));
-assert.equal((html.match(/class="faq-trigger"/g) || []).length, 10);
-assert.equal((html.match(/class="faq-answer"/g) || []).length, 10);
+assert.equal((html.match(/class="faq-trigger"/g) || []).length, 12);
+assert.equal((html.match(/class="faq-answer"/g) || []).length, 12);
 console.log('PASS: FAQ state/ARIA/focus; scroll progress/clamping/coalescing; controls/focus reveal; resize; disclosure; mobile/short-window/reduced-motion/static fallbacks; one testimonial and first-party links.');
 console.log('Synthetic DOM/geometry only. Browser layout, native input, visual smoothness and device performance need browser QA.');

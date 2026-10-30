@@ -1,4 +1,4 @@
-/* One project catalog, category rails and the existing All Work dialog. */
+/* Selected Work category rails. Full portfolio actions navigate to /work/. */
 (function(){
   'use strict';
   var work=document.getElementById('work');
@@ -12,9 +12,6 @@
   work.querySelectorAll('#workEndPanel,#design-studiesEndPanel').forEach(function(card){
     card.style.setProperty('--work-end-surface','rgba(255,255,255,'+alpha+')');
   });
-  var dialog=document.getElementById('portfolioDialog');
-  var gallery=document.getElementById('portfolioGallery');
-  var opener=document.getElementById('openPortfolio');
   var reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
   var catalog=Array.from(work.querySelectorAll('.project-card[data-slug]'));
   var rails=Array.from(work.querySelectorAll('[data-work-category]')).map(function(section){
@@ -106,109 +103,7 @@
   window.addEventListener('load',measureAll);
   if(document.fonts)document.fonts.ready.then(measureAll);
 
-  var motion=[],closing=false,oldOverflow='',lastOpener=opener,groups=[];
-  function clearMotion(){motion.forEach(function(animation){animation.cancel();});motion=[];}
-  function animateCards(elements){
-    if(reduced.matches)return;
-    elements.forEach(function(card,index){
-      if(typeof card.animate==='function')motion.push(card.animate([
-        {opacity:0,translate:'0 12px'},{opacity:1,translate:'0 0'}
-      ],{duration:640,delay:index*70,easing:'cubic-bezier(.2,0,0,1)',fill:'backwards'}));
-    });
-  }
-  function copyCard(card){
-    var copy=card.cloneNode(true);
-    copy.removeAttribute('id');
-    copy.querySelectorAll('[id]').forEach(function(element){element.removeAttribute('id');});
-    copy.querySelectorAll('img').forEach(function(image){image.loading='lazy';});
-    return copy;
-  }
-  function gridColumns(grid){
-    return getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length||1;
-  }
-  function batchSize(grid){
-    var columns=gridColumns(grid);
-    return columns===1?3:columns*2;
-  }
-  function appendBatch(group,limit,animate){
-    var added=[],fragment=document.createDocumentFragment();
-    var target=Math.min(group.projects.length,limit);
-    while(group.shown<target){
-      var card=copyCard(group.projects[group.shown++]);fragment.appendChild(card);added.push(card);
-    }
-    group.grid.appendChild(fragment);
-    group.more.hidden=group.shown>=group.projects.length;
-    group.more.setAttribute('aria-label','View more '+group.title.toLowerCase()+' ('+group.shown+' of '+group.projects.length+' shown)');
-    if(animate)animateCards(added);
-    return added;
-  }
-  function buildGroup(category,projects){
-    var container=document.createElement('div');container.className='portfolio-category';
-    if(category.key)container.dataset.portfolioCategory=category.key;
-    var head=document.createElement('div');head.className='section-head';
-    var title=document.createElement(category.key?'h3':'p');title.textContent=category.title;head.appendChild(title);
-    var description=document.createElement('span');description.className='eyebrow';description.textContent=category.description;head.appendChild(description);
-    container.appendChild(head);
-    var grid=document.createElement('div');grid.className='portfolio-gallery';grid.id='portfolio-'+(category.key||'pending');container.appendChild(grid);
-    var empty=document.createElement('p');empty.className='portfolio-empty';empty.textContent='No '+category.title.toLowerCase()+' to show yet.';empty.hidden=projects.length>0;container.appendChild(empty);
-    var more=document.createElement('button');more.type='button';more.className='visit-btn work-all';more.textContent='View More';more.setAttribute('aria-controls',grid.id);container.appendChild(more);
-    var group={title:category.title,projects:projects,grid:grid,more:more,shown:0};
-    more.addEventListener('click',function(){
-      var scrollTop=dialog.scrollTop;
-      var added=appendBatch(group,group.shown+batchSize(grid),true);
-      if(more.hidden&&document.activeElement===more&&added.length){
-        var link=added[0].querySelector('a');if(link)link.focus({preventScroll:true});
-      }
-      dialog.scrollTop=scrollTop;
-    });
-    gallery.appendChild(container);groups.push(group);
-  }
-  function openPortfolio(event){
-    if(dialog.open)return;
-    lastOpener=event.currentTarget;
-    var filter=lastOpener.dataset.portfolioFilter||'all';
-    var selected=rails.filter(function(rail){return filter==='all'||rail.key===filter;});
-    if(!selected.length)return;
-    clearMotion();closing=false;groups=[];gallery.replaceChildren();
-    document.getElementById('portfolioTitle').textContent=filter==='all'?'All Work':selected[0].title;
-    selected.forEach(function(rail){
-      buildGroup(rail,catalog.filter(function(card){return card.dataset.projectCategory===rail.key;}));
-    });
-    // Unknown metadata never defaults to client work; keep those cards in All Work.
-    if(filter==='all'&&unclassified.length)buildGroup({title:'Classification pending',description:'Project type has not been confirmed.'},unclassified);
-    // Stop an in-flight rail scroll before locking the background page.
-    window.scrollTo({top:window.scrollY,behavior:'instant'});
-    oldOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
-    dialog.showModal();dialog.scrollTop=0;
-    groups.forEach(function(group){appendBatch(group,batchSize(group.grid),false);});
-    if(!reduced.matches&&typeof dialog.animate==='function')motion.push(dialog.animate([{opacity:0},{opacity:1}],{duration:220,easing:'cubic-bezier(.2,0,0,1)'}));
-    animateCards(Array.from(gallery.querySelectorAll('.project-card')));
-  }
-  work.querySelectorAll('[data-portfolio-filter]').forEach(function(button){button.addEventListener('click',openPortfolio);});
-  function closePortfolio(){
-    if(closing||!dialog.open)return;
-    closing=true;clearMotion();
-    if(reduced.matches||typeof dialog.animate!=='function'){dialog.close();return;}
-    var exit=dialog.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 12px'}],{duration:320,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'});
-    motion.push(exit);exit.finished.catch(function(){}).then(function(){if(dialog.open)dialog.close();});
-  }
-  document.getElementById('closePortfolio').addEventListener('click',closePortfolio);
-  dialog.addEventListener('cancel',function(event){event.preventDefault();closePortfolio();});
-  dialog.addEventListener('click',function(event){
-    if(event.target!==dialog)return;
-    var rect=dialog.getBoundingClientRect();
-    if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)closePortfolio();
-  });
-  dialog.addEventListener('close',function(){
-    clearMotion();closing=false;document.body.style.overflow=oldOverflow;lastOpener.focus({preventScroll:true});
-  });
-  window.addEventListener('resize',function(){
-    measureAll();
-    if(dialog.open)groups.forEach(function(group){
-      var columns=gridColumns(group.grid),shown=Math.max(group.shown,batchSize(group.grid));
-      appendBatch(group,Math.ceil(shown/columns)*columns,false);
-    });
-  });
-  reduced.addEventListener('change',function(){clearMotion();measureAll();});
+  window.addEventListener('resize',measureAll);
+  reduced.addEventListener('change',measureAll);
   measureAll();
 })();

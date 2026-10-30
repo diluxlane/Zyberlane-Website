@@ -1,3 +1,5 @@
+> Current agency update: run `node tests/agency-positioning.cjs` for the six buyer categories, three confirmed schema families, conditional specialist gates, portfolio parity and filter state. `tests/portfolio.cjs` now checks the standalone `/work/` journey at 320/390/768/1280/1440 instead of the retired All Work modal. Older modal descriptions below are historical.
+
 # Zyberlane regression checks
 
 Run these checks from the repository root. The browser suites require Playwright and Chromium; the other suites are dependency-free:

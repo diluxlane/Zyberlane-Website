@@ -1,3 +1,5 @@
+> Historical phase record. Current agency positioning, service ownership, ten-route sitemap and portfolio navigation supersede conflicting older copy/counts here. See [agency-repositioning.md](agency-repositioning.md). Technical safeguards remain applicable.
+
 # Zyberlane content refinement — 2026-10-30
 
 Scope: benefit-led copy within the existing components; Calino.in was consulted only for general content structure and conversion clarity. No Calino wording, assets, layout, claims, metrics, pricing or branding was copied.

@@ -317,3 +317,7 @@ footer > .foot-note{flex-basis:100%;margin-top:4px;padding-top:20px;border-top:1
   .company-page .case-facts>div{padding:18px 20px;}
   .company-page .case-facts>div+div{border-left:0;border-top:1px solid var(--line);}
 }
+/* Longer agency footer identity must wrap within narrow viewports. */
+.company-page footer .brand{min-width:0;max-width:100%;flex-shrink:1;}
+.company-page footer .brand > span{min-width:0;overflow-wrap:anywhere;}
+.company-page footer .brand img{flex-shrink:0;}

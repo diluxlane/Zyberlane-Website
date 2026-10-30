@@ -8,20 +8,13 @@ const IDS = Object.freeze({ organization: ORIGIN + '/#organization', website: OR
 const PROFILES = Object.freeze(['https://github.com/Zyberlane', 'https://maps.app.goo.gl/43SbLYGa6dmvyjkN6']);
 // Persistent service identities; keep the value if a displayed heading is renamed.
 const SERVICE_IDS = Object.freeze({
-  'Web Development': 'web-development',
-  'Software Development': 'software-development',
-  'Mobile App Development': 'mobile-app-development',
-  'AI Agents & AI Automation': 'ai-agents-automation',
-  'Business Automation & Integrations': 'business-automation-integrations',
-  'SEO & Web Optimization': 'seo-web-optimization'
+  'Web Design & Development': 'web-development',
+  'Search & AI Visibility': 'seo-web-optimization',
+  'AI & Business Automation': 'ai-agents-automation'
 });
-// A small set of independent buyer intents; retain the original entity IDs.
-// Services without a detail page stay on the overview, never on a guessed URL.
 const SERVICE_PAGES = Object.freeze({
   'web-development': '/services/web-development/',
-  'software-development': '/services/web-app-development/',
-  'ai-agents-automation': '/services/ai-automation/',
-  'business-automation-integrations': '/services/ai-automation/'
+  'ai-agents-automation': '/services/ai-automation/'
 });
 const MANAGED = /<script\b(?=[^>]*\bid="zyberlane-structured-data")(?=[^>]*\btype="application\/ld\+json")[^>]*>[\s\S]*?<\/script>/g;
 const EXCLUDED = new Set(['assets', 'dist', 'docs', 'security', 'tests', 'scripts', 'node_modules']);
@@ -70,7 +63,12 @@ function graphs(root, sources) {
   if (!fs.existsSync(logoFile)) throw new Error('Missing existing official logo');
   const cards = Array.from(services.html.matchAll(/<article\b([^>]*)>([\s\S]*?)<\/article>/gi))
     .filter(match => (attributes(match[1]).class || '').split(/\s+/).includes('skill-card'));
-  const serviceNodes = cards.map(match => {
+  const serviceNodes = cards.filter(match => {
+    const name = text(match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i)?.[1] || '');
+    const status = attributes(match[1])['data-service-status'];
+    if (!['confirmed', 'conditional'].includes(status)) throw new Error('Service availability must be explicit: ' + name);
+    return status === 'confirmed'; // Conditional enquiries are not confirmed Service entities.
+  }).map(match => {
     const name = text(match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i)?.[1] || '');
     const description = text(match[2].match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1] || '');
     if (!SERVICE_IDS[name] || !description) throw new Error('Assign a verified, persistent identity to the visible service: ' + name);
@@ -82,7 +80,7 @@ function graphs(root, sources) {
   if (!serviceNodes.length || new Set(serviceNodes.map(node => node['@id'])).size !== serviceNodes.length) throw new Error('Missing/duplicate service identities');
 
   return pages.map(page => {
-    const type = page === about ? 'AboutPage' : page === services ? 'CollectionPage' : 'WebPage';
+    const type = page === about ? 'AboutPage' : (page === services || page.url === ORIGIN + '/work/') ? 'CollectionPage' : 'WebPage';
     const node = { '@type': type, '@id': page.url + '#webpage', url: page.url, name: page.name, description: page.description,
       isPartOf: ref(IDS.website), about: ref(IDS.organization) };
     const graph = [node];
@@ -98,6 +96,7 @@ function graphs(root, sources) {
       node.breadcrumb = ref(page.url + '#breadcrumb');
       const trail = [{ name: 'Home', item: home.url }];
       if (page !== services && new URL(page.url).pathname.startsWith('/services/')) trail.push({ name: services.label, item: services.url });
+      if (page.url === ORIGIN + '/work/divine-tattoo/') trail.push({ name: 'Work', item: ORIGIN + '/work/' });
       trail.push({ name: page.label, item: page.url });
       graph.push({ '@type': 'BreadcrumbList', '@id': page.url + '#breadcrumb', itemListElement:
         trail.map((item, index) => ({ '@type': 'ListItem', position: index + 1, ...item })) });
@@ -114,6 +113,8 @@ function graphs(root, sources) {
       const primaryServices = serviceNodes.filter(service => service.url === page.url);
       if (primaryServices.length) node.mainEntity = primaryServices.map(service => ref(service['@id']));
     }
+    if (page.url === ORIGIN + '/services/web-app-development/') node.mainEntity = [ref(ORIGIN + '/#service-web-development')];
+    if (page.url === ORIGIN + '/work/') node.mentions = [ref(ORIGIN + '/work/divine-tattoo/#project')];
     if (page.url === ORIGIN + '/work/divine-tattoo/') {
       const projectId = page.url + '#project';
       node.mainEntity = ref(projectId);

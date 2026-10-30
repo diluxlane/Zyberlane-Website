@@ -1,6 +1,6 @@
 # Zyberlane Website
 
-Official website repository for **Zyberlane**, a founder-led software and digital solutions studio.
+Official website repository for **Zyberlane**, a founder-led web design, branding and digital marketing agency, with specialist-dependent work confirmed per engagement.
 
 **Live website:** https://zyberlane.vercel.app
 
@@ -34,7 +34,8 @@ The website presents Zyberlane's services, selected work, company information an
 ```text
 index.html          Main website
 about/              About page
-services/           Service pages
+services/           Service overview and retained detail URLs
+work/               Full portfolio and Divine Tattoo case study
 privacy-policy/     Privacy policy
 terms/              Terms and conditions
 admin/              Existing administrative interface
@@ -46,6 +47,12 @@ robots.txt           Crawler directives
 sitemap.xml          Sitemap
 vercel.json          Vercel configuration
 ```
+
+## Current positioning and content ownership
+
+See [the agency repositioning report](docs/agency-repositioning.md) for scope, capability gates and validation. The six buyer-facing service areas are curated in source; three confirmed core service families appear in JSON-LD. Branding, marketing and content remain conditional enquiries until suitable specialist delivery is confirmed. Legacy CMS expertise cards no longer replace the homepage Why section or service architecture. No database records were modified.
+
+The full portfolio is `/work/`; `?category=` filters the same canonical page. The existing genuine case study remains `/work/divine-tattoo/`. Future blog and case-study indexes are documented, not published as empty pages.
 
 ## Local Development
 
@@ -63,7 +70,7 @@ Then open `http://localhost:8080`.
 
 The repository is connected to Vercel for Git-based deployment.
 
-**Production Vercel URL:** https://zyberlane.vercel.app
+**Vercel hosted review URL:** https://zyberlane.vercel.app
 
 Repository documentation should use the verified Vercel URL above for the hosted preview/site reference.
 

@@ -1,0 +1,86 @@
+[
+  {
+    "command": "node scripts/build.cjs",
+    "exit_code": 0,
+    "stdout": "Built dist/: 10 canonical public pages; admin retained with noindex; internal source excluded.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node scripts/structured-data.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: source JSON-LD matches public metadata, founder facts, linked profiles and visible service content.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/technical-seo.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: 10 public pages; unique metadata, production canonicals, JSON-LD syntax, 226 internal links/fragments, 80 local resources; sitemap, robots and admin exclusion.\nPASS: internal source excluded; index redirects; future-page discovery; verification files preserved; preview canonical rejected.\nHTTP redirects, CDN crawler policy and browser rendering require separate live verification.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/entity-seo.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: 10 connected page graphs; 27 unique entity definitions; 198 property/range checks against the retrieved Schema.org vocabulary.\nPASS: public founder/organization/profile facts; three confirmed visible services; conditional specialist requests excluded; real logo; production-only identities even under preview environment variables; breadcrumbs; drift detection; invalid relationships rejected; no personal/private/fabricated extensions.\nSchema vocabulary and graph checks do not guarantee Google rich-result display or search/AI ranking.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/search-intent-seo.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: 10 public destinations including the Phase 4 project page; unique synchronized metadata; one H1 and ordered headings; three retained service detail pages and the standalone portfolio; three confirmed service entities; real breadcrumbs; production identity; quotation-based content; missing destinations rejected.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/cms-seo.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: two legacy CMS defaults retain reviewed metadata; intentional SEO/hero edits work; rendered title/description/social/graph stay aligned; all entity identities unchanged; script-breakout text escaped; missing/blank settings preserve source defaults.\nPASS: previous hero defaults upgrade across whitespace; custom role and description edits retain precedence.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/ai-search-readiness.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: public crawler rules; admin exclusion; production-only unique sitemap; static metadata, H1, navigation and JSON-LD; preview host isolation; internal source exclusion.\nLIMIT: repository checks and spoofable User-Agent probes cannot verify genuine crawler IP access through Cloudflare/CDN.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/indexnow.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: key/public build, canonical and deletion guards, deduplication, dry-run offline, 404 refusal, explicit production submission and preview/build isolation.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/performance-budget.cjs",
+    "exit_code": 0,
+    "stdout": "Performance delivery budget passed: homepage HTML, identical image bytes, and critical effects.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/client-proof.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: Divine Tattoo project route, client classification, canonical/metadata, factual scope, links, WebPage/CreativeWork/Service relationships, quote attribution, sitemap and no unsupported review markup.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node security/verify.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: 4 inline scripts + shared JS parse; JSON-LD parses; CSP hashes/hosting parity; 3 XSS payloads encoded; normal package rendering; SDK pin/SRI attributes; query minimization and generic booking error.\nNot browser, database, advisory, visual screenshot or authenticated integration tests.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/reviews-faq.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: FAQ state/ARIA/focus; scroll progress/clamping/coalescing; controls/focus reveal; resize; disclosure; mobile/short-window/reduced-motion/static fallbacks; one testimonial and first-party links.\nSynthetic DOM/geometry only. Browser layout, native input, visual smoothness and device performance need browser QA.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/agency-positioning.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: agency identity, six buyer categories, three confirmation-gated Service entities, no placeholder indexes, legacy CMS isolation, honest portfolio parity, category navigation, filter state/keyboard/history and modified-click behavior.\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/fluid-compatibility.cjs",
+    "exit_code": 0,
+    "stdout": "PASS: missing float extension, missing WebGL2, and shader failure all recover to working 2D fluid; no fatal errors; controls remain enabled\nPASS: replacement canvas accepts touch, guards ended capture, cancels contact, preserves pause/resume, clear, visibility and one RAF loop\nPASS: CPU fallback respects reduced motion and explicit play\nPASS: real fluid fields evolve, remain finite for 120 steps, render non-black red pixels, and clear to zero\nPASS: homepage initializes without lab controls; document handlers bind once after fallback; passive mobile scroll input avoids duplicates and honors cancellation; desktop hover responds\nPASS: desktop/mobile home stays empty for ten simulated seconds and resize; trusted input emits, synthetic/stationary input does not; dye dissipates and fresh initialization is empty\nPASS: reduced-motion homepage allocates no graphics until enabled and stops/hides when preference changes\nPASS: homepage waits for the existing loading screen before starting its atmosphere\nPASS: repeated desktop/mobile viewport resizing and low-FPS quality reduction retain live fields, finite data and one RAF; explicit clear still works\nPASS: fast touch devices keep quality; slow touch devices lower only display resolution without reallocating or clearing live fields\nPASS: root homepage loads both fluid engines in order, canvas is decorative and cannot intercept controls or disable page scrolling\nBrowser/device testing still required; these are CPU numerical and synthetic input regressions.\n",
+    "stderr": ""
+  }
+]
