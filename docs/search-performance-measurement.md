@@ -30,6 +30,8 @@ All nine pages are present in `dist/` after `node scripts/build.cjs`. The previo
 
 ## Current agency query taxonomy (supersedes the Phase 3 grouping)
 
+Service detail ownership follows [the current hierarchy](service-hierarchy.md). The three non-core areas invite project briefs; omitted offerings are internal planning terms, not current advertised capabilities. Keep observed demand for these separate from delivery readiness.
+
 Use observed queries first; the examples below are labels for classifying exports, not a promise of impressions or an exhaustive keyword list. Normalize case/whitespace. Mark queries containing `zyberlane` or `zyberlane.com`, including `dilux zyberlane`, **branded** before applying service themes. A bare `Dilux` query is not automatically brand demand. Assign each observed query to one primary group; label uncertain or mixed intent `other / review`, rather than force a service match.
 
 | Group | Observed-query classification examples | Intended destination |

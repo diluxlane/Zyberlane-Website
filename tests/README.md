@@ -1,3 +1,5 @@
+> Services refinement: `tests/agency-positioning.cjs` now checks six category cards, 23 exact advertised sub-services, internal-register enforcement, no public readiness labels, and rejection of unverified additions. The three evidence-backed Service descriptions include their visible scope; the sitemap remains ten routes.
+
 > Current agency update: run `node tests/agency-positioning.cjs` for the six buyer categories, three confirmed schema families, conditional specialist gates, portfolio parity and filter state. `tests/portfolio.cjs` now checks the standalone `/work/` journey at 320/390/768/1280/1440 instead of the retired All Work modal. Older modal descriptions below are historical.
 
 # Zyberlane regression checks

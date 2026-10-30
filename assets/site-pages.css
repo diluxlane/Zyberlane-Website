@@ -321,3 +321,8 @@ footer > .foot-note{flex-basis:100%;margin-top:4px;padding-top:20px;border-top:1
 .company-page footer .brand{min-width:0;max-width:100%;flex-shrink:1;}
 .company-page footer .brand > span{min-width:0;overflow-wrap:anywhere;}
 .company-page footer .brand img{flex-shrink:0;}
+/* Detailed Services scope uses the existing cards, spacing and responsive breakpoints. */
+.company-page .skills-wrap.service-hierarchy{grid-template-columns:minmax(0,1fr);}
+.company-page .service-hierarchy .service-examples{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 24px;}
+@media(max-width:1000px){.company-page .service-hierarchy .service-examples{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:560px){.company-page .service-hierarchy .service-examples{grid-template-columns:minmax(0,1fr);}}
